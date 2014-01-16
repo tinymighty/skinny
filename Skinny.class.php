@@ -13,7 +13,7 @@ class Skinny{
   public static function init(&$parser){
     $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
     $parser->setFunctionHook('setskin', 'Skinny::setSkin');
-    $parser->setFunctionHook('skintemplate', 'Skinny::skinTemplate');
+    $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
     return true;
   }
 
@@ -34,7 +34,7 @@ class Skinny{
 
   //Parser function: {{#skintemplate:template-name|argument=value|argument=value}}
   //render a template from a skin template file...
-  public static function skinTemplate($parser, $spot, $template){
+  public static function insertTemplate($parser, $template, $spot=false){
     //process additional arguments into a usable array
 
     /*
@@ -54,13 +54,16 @@ class Skinny{
     //sanitize the template name
     $template = preg_replace('/[^A-Za-z0-9_\-]/', '_', $template);
 
-    if(!isset(self::$content[$spot])){
-      self::$content[$spot] = array();
+    if($spot){
+      if(!isset(self::$content[$spot])){
+        self::$content[$spot] = array();
+      }
+      self::$content[$spot][] = array('template'=>$template, 'params'=>$params);
+      return '';
+    }else{
+      //this will be stripped out, assuming the skin is based on Skinny.template
+      return 'ADDTEMPLATE:'.$template.':ETALPMETDDA';
     }
-    self::$content[$spot][] = array('template'=>$template, 'params'=>$params);
-    //add an insert to replace later!
-    return '';
-
   }
   
   public static function run($out, &$html){
@@ -124,20 +127,5 @@ class Skinny{
     return true;
   }
 
-  //hook for BeforePageDisplay
-  /*public static function renderTemplates(OutputPage &$out, Skin &$skin){
-    if(!$skin){
-      //preg_
-      return true;
-    }
-    $pattern = '~ADDTEMPLATE:([\w_-]+):ETALPMETDDA~m';
-    if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
-      foreach($matches as $match){
-        $html = str_replace($pattern[0], '', $html);
-      }
-      
-    }
-    return true;
-  }*/
 
 }

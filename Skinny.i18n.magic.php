@@ -14,5 +14,5 @@ $magicWords = array();
 $magicWords['en'] = array(
 	'setskin' => array( 0, 'setskin', 'set skin' ),
 	'movetoskin' => array( 0, 'movetoskin', 'move to skin' ),
-	'skintemplate' => array(0, 'skintemplate', 'skin template')
+	'skinsert' => array(0, 'skinsert', 'skin insert')
 );

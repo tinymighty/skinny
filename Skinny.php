@@ -19,7 +19,6 @@ $wgExtensionMessagesFiles['Skinny'] = dirname( __FILE__ ) . '/Skinny.i18n.php';
 $wgHooks['ParserFirstCallInit'][] = 'Skinny::init';
 $wgHooks['OutputPageBeforeHTML'][] = 'Skinny::run';
 $wgHooks['RequestContextCreateSkin'][] = 'Skinny::getSkin';
-//$wgHooks['BeforePageDisplay'][] = 'Skinny::renderTemplates';
 
 $wgExtensionCredits['parserhook'][] = array(
    'path' => __FILE__,
