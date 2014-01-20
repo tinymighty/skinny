@@ -11,6 +11,7 @@
  */
 $wgAutoloadClasses['Skinny'] = dirname(__FILE__) . '/Skinny.class.php';
 $wgAutoloadClasses['SkinnyTemplate'] = dirname(__FILE__) . '/Skinny.template.php';
+$wgAutoloadClasses['SkinnySlim'] = dirname(__FILE__) . '/Skinny.slim.php';
 
 
 $wgExtensionMessagesFiles['SkinnyMagic'] = dirname( __FILE__ ) . '/Skinny.i18n.magic.php';

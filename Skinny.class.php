@@ -17,6 +17,11 @@ class Skinny{
     return true;
   }
 
+  public static function build( $path, $options=array() ){
+    $options['template_path'] = $path;
+    return new SkinnySlim( $options );
+  }
+
   //Parser function: {{#movetoskin: target | content}}
   public static function moveToSkin($parser, $name='', $content=''){
     //we have to wrap the inner content within <p> tags, because MW screws up otherwise by placing a <p> tag before and after with related closing and opening tags within
