@@ -121,6 +121,30 @@ class SkinnySlim {
 	function insert($place, $args=array()){
 		echo $this->get($place, $args);
 	}
+	/**
+	 * Convenience template method for <?php echo $this->get('before:') ?>
+	 */
+	function before($place, $args=array()){
+		$this->insert('before:'.$place, $args);
+	}
+	/**
+	 * Convenience template method for <?php echo $this->get('after:') ?>
+	 */
+	function after($place, $args=array()){
+		$this->insert('after:'.$place, $args);
+	}
+	/**
+	 * Convenience template method for <?php echo $this->get('prepend:') ?>
+	 */
+	function prepend($place, $args=array()){
+		$this->insert('prepend:'.$place, $args);
+	}
+	/**
+	 * Convenience template method for <?php echo $this->get('append:') ?>
+	 */
+	function append($place, $args=array()){
+		$this->insert('append:'.$place, $args);
+	}
 
 	/**
 	 * Run content content, optionally passing arguments to provide to
