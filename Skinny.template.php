@@ -14,29 +14,52 @@
 abstract class SkinnyTemplate extends BaseTemplate {
 
 	//core settings
-	protected $_settings = array(
+	protected $_defaults = array(
 		'debug' => 'false',
 		'mainTemplate' => 'main'
 	);
-	//settings for the child skin
-	protected $settings = array();
 
-	public $options = array();
+	protected $defaults = array();
+	protected $options = array();
 
 	protected $_template_paths = array();
 
-	public function __construct(){
+	public function __construct( $options=array() ){
 		
 		parent::__construct();
-
-		//set options
-		$options = $this->options = array_merge($this->_settings, $this->settings, $this->options, Bootstrap::$options);
+		$this->setDefaults( $this->_defaults );
+		$this->setOptions( $options );
 
 		//adding path manually ensures that there's an entry for every class in the heirarchy
 		//allowing for template fallback to every skin all the way down
 		$this->addTemplatePath( dirname(__FILE__).'/templates' );
 		
 
+	}
+
+	public function setDefaults($defaults){
+		$this->defaults = array_merge( $this->defaults, $defaults ); 
+	}
+	public function setOptions($options){
+		if( empty($this->options) ){
+			$this->options = $this->defaults;
+		}
+		foreach($this->defaults as $k => $v){
+			if( isset($options[$k]) ){
+				if( is_array($v) ){
+					//allow option=true/false as a shortcut for option=[enabled=>true/false]
+					if( is_bool($options[$k]) && isset($v['enabled']) ){
+						$options[$k] = array('enabled'=>$options[$k]);
+					}
+
+					$this->options[$k] = array_merge_recursive( $this->defaults[$k], $options[$k] );
+					
+				}else{
+					$this->options[$k] = $options[$k];
+				}
+				
+			}
+		}
 	}
 
 	protected function addTemplatePath($path){
@@ -84,64 +107,86 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	}
 
 	/**
-	 * Add html content to a specific hook point
-	 * or assign an object method which returns html, it will be run at render time
+	 * Add the result of a function callback to a zone
 	 *
-	 * eg.  add('before:content', '<h2>Some html content</h2>')
-	 * 			add('before:content', array('methodName', $obj))
+	 * 	eg.	add('before:content', array('methodName', $obj))
+	 *			add('before:content', 'methodOnThisObject')
 	 */
-	public function addHook($place, $hook, $args=array()){
-		if(!isset($this->content[$place])){
-			$this->content[$place] = array();
+	public function addHook($zone, $hook, $args=array()){
+		if(!isset($this->content[$zone])){
+			$this->content[$zone] = array();
 		}
 		//allow just a string reference to a method on this skin object
 		if(!is_array($hook) && method_exists($this, $hook)){
 			$hook = array($hook, $this);
+		}else{
+			return false;
 		}
-		$this->content[$place][] = array('type'=>'hook', 'hook'=>$hook, 'arguments'=>$args);
+		$this->content[$zone][] = array('type'=>'hook', 'hook'=>$hook, 'arguments'=>$args);
 	}
 
 	/**
-	 * Add html content to a specific hook point
-	 * or assign an object method which returns html, it will be run at render time
+	 * Render the output of a template to a zone
 	 *
 	 * eg.  add('before:content', 'template-name')
 	 */
-	public function addTemplate($place, $template, $params=array()){
-		if(!isset($this->content[$place]))
-			$this->content[$place] = array();
-		$this->content[$place][] = array('type'=>'template', 'template'=>$template, 'params'=>$params);
+	public function addTemplate($zone, $template, $params=array()){
+		if(!isset($this->content[$zone]))
+			$this->content[$zone] = array();
+		$this->content[$zone][] = array('type'=>'template', 'template'=>$template, 'params'=>$params);
 	}
 
-		/**
-	 * Add html content to a specific hook point
-	 * or assign an object method which returns html, it will be run at render time
+	/**
+	 * Add html content to a zone
 	 *
 	 * eg.  add('before:content', '<h2>Some html content</h2>')
 	 */
-	public function addHTML($place, $content){
-		if(!isset($this->content[$place]))
-			$this->content[$place] = array();
-		$this->content[$place][] = array('type'=>'html', 'html'=>$content);
+	public function addHTML($zone, $content){
+		if(!isset($this->content[$zone]))
+			$this->content[$zone] = array();
+		$this->content[$zone][] = array('type'=>'html', 'html'=>$content);
+	}
+
+	/**
+	 * Add a zone to a zone. Allows adding zones without editing template files.
+	 *
+	 * eg.  add('before:content', 'zone name')
+	 */
+	public function addZone($zone, $name, $params=array()){
+		if(!isset($this->content[$zone]))
+			$this->content[$zone] = array();
+		$this->content[$zone][] = array('type'=>'zone', 'zone'=>$name, 'params'=>$params);
 	}
 
 	/**
 	 * Convenience template method for <?php echo $this->render() ?>
 	 */
-	function insert($place, $args=array()){
-		echo $this->render($place, $args);
+	function insert($zone, $args=array()){
+		echo $this->render($zone, $args);
+	}
+	function before($zone, $args=array()){
+		$this->insert('before:'.$zone, $args);
+	}
+	function after($zone, $args=array()){
+		$this->insert('after:'.$zone, $args);
+	}
+	function prepend($zone, $args=array()){
+		$this->insert('prepend:'.$zone, $args);
+	}
+	function append($zone, $args=array()){
+		$this->insert('append:'.$zone, $args);
 	}
 
 	/**
 	 * Run content content, optionally passing arguments to provide to
 	 * object methods
 	 */
-	protected function render($place, $args=array()){
+	protected function render($zone, $args=array()){
 		$sep = isset($args['seperator']) ? $args['seperator'] : ' ';
 
 		$content = '';
-		if(isset($this->content[$place])){
-			foreach($this->content[$place] as $item){
+		if(isset($this->content[$zone])){
+			foreach($this->content[$zone] as $item){
 				if($this->options['debug']===true){
 					$content.='<!--Skinny:Template: '.$template.'-->';
 				}
@@ -158,13 +203,16 @@ abstract class SkinnyTemplate extends BaseTemplate {
 					case 'template':
 						$content .= $this->renderTemplate($item['template'], $item['params']);
 						break;
+					case 'zone':
+						$content .= $this->render($item['zone'], $item['params']);
+						break;
 				}	
 
 			}
 		}
 		//content from #movetoskin and #skintemplate
-		if( Skinny::hasContent($place) ){
-			foreach(Skinny::getContent($place) as $item){
+		if( Skinny::hasContent($zone) ){
+			foreach(Skinny::getContent($zone) as $item){
 
 				//pre-rendered html from #movetoskin
 				if(isset($item['html'])){

@@ -7,10 +7,21 @@ class Skinny{
   //singleton
   private function __construct(){}
   
+  protected static $defaults=array(
+    'extract toc' => false,
+    'remove toc' => false
+  );
+  public static $options=array();
   public static $content = array();
   protected static $pageSkin = null;
   
-  public static function init(&$parser){
+  public static function setOptions( $options ){
+    //only set defined options
+    $options = array_intersect_key($options, self::$defaults);
+    self::$options = array_merge( self::$defaults, self::$options, $options );
+  }
+
+  public static function parserInit(&$parser){
     $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
     $parser->setFunctionHook('setskin', 'Skinny::setSkin');
     $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
