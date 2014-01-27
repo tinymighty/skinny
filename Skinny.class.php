@@ -85,6 +85,9 @@ class Skinny{
   public static function run($out, &$html){
     $html = self::processMoveContent($html);
     $html = self::processSetSkin($html);
+    if(self::$options['extract toc']){
+      $html = self::extractTOC($html);
+    }
     return true;
   }
 
@@ -120,6 +123,20 @@ class Skinny{
     }else{
       return array();
     }
+  }
+
+  public static function extractTOC( $html ){
+    //a super hacky way to grab the TOC.  If the TOC HTML is changed in future versions this will break.
+    //just grabs everything from <div id="toc" to </li></ul></div>
+    if( preg_match('~<div id="toc"([\S\s]*?)</li>\n\s*</ul>\n\s*</div>~mi', $html, $match)){
+      
+      if(self::$options['remove toc']){
+        $html = str_replace($match[0], '', $html);
+      }
+      $toc = str_replace('id="toc"', '', $match[0]);
+      self::$content['toc'] = array( array('html'=>$toc) );
+    }
+    return $html;
   }
 
 
