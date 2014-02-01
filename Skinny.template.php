@@ -113,17 +113,63 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	 * This is called by MediaWiki to render the skin.
 	 */
 	final function execute() {
-		$this->initialize();
-		$this->_preExecute();
+		//set up standard content zones
+
+		//head element (including opening body tag)
+		$this->addHTML('head', $this->data[ 'headelement' ]);
+		//the logo image defined in LocalSettings
+		$this->addHTML('logo', $this->data['logopath']);
+		//the article title 
+		if($this->options['show title']){
+			$this->addHTML('content-container.class', 'has-title');
+			$this->addTemplate('title', 'title', array(
+				'title'=>$this->data['title']
+			));
+		}
+		//article content
+		$this->addHTML('content', $this->parseContent($this->data['bodytext']));
+		//the site notice
+		$this->addTemplate('notice', 'site-notice', array(
+			'notice'=>$this->data['sitenotice']
+		));
+		//the site tagline, if there is one
+		if($this->options['show tagline']){
+			$this->addHTML('content-container.class', 'has-tagline');
+			$this->addTemplate('tagline', 'tagline', array(
+				'tagline'=>wfMsg('tagline')
+			));
+		}
+		$this->addHook('breadcrumbs', 'breadcrumbs');
+
+		//the contents of Mediawiki:Sidebar
+		$this->addTemplate('classic-sidebar', 'classic-sidebar', array(
+			'sections'=>$this->data['sidebar']
+		));
+		//list of language variants
+		$this->addTemplate('language variants', 'language-variants', array(
+			'variants'=>$this->data['language_urls']
+		));
+
+		//page footer
+		$this->addTemplate('footer', 'footer', array(
+			'icons'=>$this->getFooterIcons( "icononly" ), 
+			'links'=>$this->getFooterLinks( "flat" )
+		));
+		//mediawiki needs this to inject script tags after the footer
+		$this->addHook('after:footer', 'afterFooter');
+
+		
 		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
-		echo $this->renderTemplate($this->options['mainTemplate']);
+
+		//allow skins to set up before render
+		$this->initialize();
+
+
+		echo $this->renderTemplate($this->options['layout']);
 
 	}
 
-	/**/
-	protected function _preExecute(){
 
-	}
 
 	public function renderTemplate($template, $args=array()){
 		ob_start();
@@ -132,14 +178,21 @@ abstract class SkinnyTemplate extends BaseTemplate {
 			echo '<div class="skinny-debug">Skinny:Template: '.$template.'</div>';
 		}
 		//try all defined template paths
+		$exists = false;
 		foreach($this->_template_paths as $path){
 			$filepath = $path.'/'.$template.'.tpl.php';
 			if( file_exists($filepath) ){
+				$exists = true;
 				require( $filepath );
 				break; //once we've rendered a template, stop traversing template_paths
 			}
 		}
-		return ob_get_clean();
+		if($exists){
+			$html = ob_get_clean();
+		}else{
+			$html = 'Template file `'.$template.'.tpl.php` not found!';
+		}
+		return $html;
 	}
 
 	/**
@@ -212,6 +265,11 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	function append($zone, $args=array()){
 		$this->insert('append:'.$zone, $args);
 	}
+	function attach($zone, $args=array()){
+		$this->prepend($zone, $args);
+		$this->insert($zone, $args);
+		$this->append($zone, $args);
+	}
 
 	/**
 	 * Run content content, optionally passing arguments to provide to
@@ -271,7 +329,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	}
 
 
-  //parse the bodytext and insert any templates added by the 
+  //parse the bodytext and insert any templates added by the skintemplate parser function
   public function parseContent( $html ){
     $pattern = '~ADDTEMPLATE:([\w_-]+):ETALPMETDDA~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
@@ -281,6 +339,53 @@ abstract class SkinnyTemplate extends BaseTemplate {
     }
     return $html;
   }
+
+  /* 
+  Convert a MediaWiki:message into a navigation structure
+  Builds on Skin::addToSidebar to move all headerless entries into the primary navigation*/
+  protected function processNavigationFromMessage( $message_name ){
+  	$nav = array();
+  	$this->getSkin()->addToSidebar(&$nav, $message_name);
+
+  	return $nav;
+  }
+
+  
+  protected function afterFooter(){
+		ob_start();
+		$this->printTrail();
+		return ob_get_clean();
+	}
+
+	/* Render the category heirarchy as breadcrumbs */
+	protected function breadcrumbs() {
+      
+    // get category tree
+    $parenttree = $this->getSkin()->getTitle()->getParentCategoryTree();
+    $rendered = $this->getSkin()->drawCategoryBrowser( $parenttree );
+    /*echo '<pre>';
+    print_r($parenttree);
+    print_r($rendered);
+    echo '</pre>';*/
+    //exit;
+    // Skin object passed by reference cause it can not be
+    // accessed under the method subfunction drawCategoryBrowser
+    $temp = explode( "\n", $rendered );
+    unset( $temp[0] );
+    asort( $temp );
+
+    if (empty($temp)) {
+        return '';
+    }
+    $trees = array();
+    foreach ($temp as $line) {
+    	preg_match_all('~<a[\S\s]+?</a>~', $line, $matches);
+    	$trees[] = $matches[0];
+    }
+
+    return $this->renderTemplate('breadcrumbs', array('trees' => $trees) );
+  }
+
 
 
 } // end of class
