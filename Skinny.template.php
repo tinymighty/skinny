@@ -14,53 +14,89 @@
 abstract class SkinnyTemplate extends BaseTemplate {
 
 	//core settings
-	protected $_defaults = array(
+	protected $defaults = array(
 		'debug' => 'false',
-		'mainTemplate' => 'main'
+		'layout' => 'main',
+		'template paths' => array(),
+
+		'show title'=> true,
+		'show tagline' => true,
+
+		'breadcrumbs'=>array(
+			'enabled'=>true
+		)
 	);
 
-	protected $defaults = array();
+	//a stack of new defaults, added to by child objects
+	//this ensures child defaults overwrite their parents
+	protected $_defaults = array();
+
 	protected $options = array();
 
 	protected $_template_paths = array();
 
-	public function __construct( $options=array() ){
+	public function __construct( $options=array(), $defaults=array() ){
 		
 		parent::__construct();
-		$this->setDefaults( $this->_defaults );
+		$this->mergeDefaults();
 		$this->setOptions( $options );
-
+		
 		//adding path manually ensures that there's an entry for every class in the heirarchy
 		//allowing for template fallback to every skin all the way down
 		$this->addTemplatePath( dirname(__FILE__).'/templates' );
 		
-
-	}
-
-	public function setDefaults($defaults){
-		$this->defaults = array_merge( $this->defaults, $defaults ); 
-	}
-	public function setOptions($options){
-		if( empty($this->options) ){
-			$this->options = $this->defaults;
+		foreach($this->options['template paths'] as $path){
+			$this->addTemplatePath($path);
 		}
-		foreach($this->defaults as $k => $v){
-			if( isset($options[$k]) ){
-				if( is_array($v) ){
-					//allow option=true/false as a shortcut for option=[enabled=>true/false]
-					if( is_bool($options[$k]) && isset($v['enabled']) ){
-						$options[$k] = array('enabled'=>$options[$k]);
-					}
+	}
 
-					$this->options[$k] = array_merge_recursive( $this->defaults[$k], $options[$k] );
-					
-				}else{
-					$this->options[$k] = $options[$k];
-				}
-				
+	public function mergeDefaults(){
+		if(!empty($this->_defaults)){
+			//merge all defaults in, starting from the most recently added
+			//this means children's defaults override their parents
+			while($defaults = array_pop($this->_defaults) ){
+				$this->defaults = $this->mergeOptionsArrays( $this->defaults, $defaults ); 
 			}
 		}
 	}
+
+	//recursively merge arrays, but if there are key conflicts,
+	//overwrite from right to left
+	public function mergeOptionsArrays($left, $right){
+		$new = $left;
+		foreach($right as $k => $v){
+			if( isset($left[$k]) ){
+				//if there's an existing value, merge it if it's an array
+				if( is_array($left[$k]) ){
+					if( is_array($v) ){
+						$new[$k] = $this->mergeOptionsArrays($left[$k], $v);
+					}else{
+						//if the new option isn't an array, we'll interpret it as a boolean
+						//and add this as an 'enabled' property to the left array
+						//eg. this allows passing an option as false as a shortcut for array( enabled => false )
+						$new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
+					}
+				}else{
+					//otherwise just copy it over
+					$new[$k] = $v;
+				}
+
+			}else{
+				//if there's no existing value, just copy it over
+				$new[$k] = $v;
+			}
+		}
+		return $new;
+	}
+
+	public function setOptions($options, $reset=false){
+		if( $reset || empty($this->options) ){
+			//set all options to their defaults
+			$this->options = $this->defaults;
+		}
+		$this->mergeOptionsArrays($this->options, $options);
+	}
+
 
 	protected function addTemplatePath($path){
 		if(file_exists($path) && is_dir($path)){
