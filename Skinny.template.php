@@ -16,7 +16,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	//core settings
 	protected $defaults = array(
 		'debug' => 'false',
-		'layout' => 'main',
+		'main template' => 'main',
 		'template paths' => array(),
 
 		'show title'=> true,
@@ -35,12 +35,10 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
 	protected $_template_paths = array();
 
-	public function __construct( $options=array(), $defaults=array() ){
-		
+	public function __construct( $options=array() ){
 		parent::__construct();
 		$this->mergeDefaults();
 		$this->setOptions( $options );
-		
 		//adding path manually ensures that there's an entry for every class in the heirarchy
 		//allowing for template fallback to every skin all the way down
 		$this->addTemplatePath( dirname(__FILE__).'/templates' );
@@ -63,30 +61,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	//recursively merge arrays, but if there are key conflicts,
 	//overwrite from right to left
 	public function mergeOptionsArrays($left, $right){
-		$new = $left;
-		foreach($right as $k => $v){
-			if( isset($left[$k]) ){
-				//if there's an existing value, merge it if it's an array
-				if( is_array($left[$k]) ){
-					if( is_array($v) ){
-						$new[$k] = $this->mergeOptionsArrays($left[$k], $v);
-					}else{
-						//if the new option isn't an array, we'll interpret it as a boolean
-						//and add this as an 'enabled' property to the left array
-						//eg. this allows passing an option as false as a shortcut for array( enabled => false )
-						$new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
-					}
-				}else{
-					//otherwise just copy it over
-					$new[$k] = $v;
-				}
-
-			}else{
-				//if there's no existing value, just copy it over
-				$new[$k] = $v;
-			}
-		}
-		return $new;
+		return Skinny::mergeOptionsArrays($left, $right);
 	}
 
 	public function setOptions($options, $reset=false){
@@ -94,11 +69,15 @@ abstract class SkinnyTemplate extends BaseTemplate {
 			//set all options to their defaults
 			$this->options = $this->defaults;
 		}
-		$this->mergeOptionsArrays($this->options, $options);
+		$this->options = $this->mergeOptionsArrays($this->options, $options);
+	}
+
+	public function setDefaults( $defaults ){
+		$this->_defaults[] = $defaults;
 	}
 
 
-	protected function addTemplatePath($path){
+	public function addTemplatePath($path){
 		if(file_exists($path) && is_dir($path)){
 			array_unshift( $this->_template_paths, $path);
 		}
@@ -129,9 +108,11 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		//article content
 		$this->addHTML('content', $this->parseContent($this->data['bodytext']));
 		//the site notice
-		$this->addTemplate('notice', 'site-notice', array(
-			'notice'=>$this->data['sitenotice']
-		));
+		if( !empty($this->data['sitenotice'])){
+			$this->addTemplate('notice', 'site-notice', array(
+				'notice'=>$this->data['sitenotice']
+			));
+		}
 		//the site tagline, if there is one
 		if($this->options['show tagline']){
 			$this->addHTML('content-container.class', 'has-tagline');
@@ -165,7 +146,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		$this->initialize();
 
 
-		echo $this->renderTemplate($this->options['layout']);
+		echo $this->renderTemplate($this->options['main template']);
 
 	}
 

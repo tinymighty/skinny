@@ -14,16 +14,49 @@ class Skinny{
   public static $options=array();
   public static $content = array();
   protected static $pageSkin = null;
+  protected static $skinVariant = null;
   
-  public static function setOptions( $options ){
-    //only set defined options
-    $options = array_intersect_key($options, self::$defaults);
-    self::$options = array_merge( self::$defaults, self::$options, $options );
+  public static function setOptions( $options=array(), $reset=false ){
+    if( $reset || empty(self::$options) ){
+      //set all options to their defaults
+      self::$options = self::$defaults;
+    }
+    self::$options = self::mergeOptionsArrays(self::$options, $options );
+  }
+
+  //recursively merge arrays, but if there are key conflicts,
+  //overwrite from right to left
+  public static function mergeOptionsArrays($left, $right){
+    $new = $left;
+    foreach( $right as $k => $v){
+      if( isset($left[$k]) ){
+        //if there's an existing value, merge it if it's an array
+        if( is_array($left[$k]) ){
+          if( is_array($v) ){
+            $new[$k] = self::mergeOptionsArrays($left[$k], $v);
+          }else{
+            //if the new option isn't an array, we'll interpret it as a boolean
+            //and add this as an 'enabled' property to the left array
+            //eg. this allows passing an option as false as a shortcut for array( enabled => false )
+            $new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
+          }
+        }else{
+          //otherwise just copy it over
+          $new[$k] = $v;
+        }
+
+      }else{
+        //if there's no existing value, just copy it over
+        $new[$k] = $v;
+      }
+    }
+    return $new;
   }
 
   public static function parserInit(&$parser){
     $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
     $parser->setFunctionHook('setskin', 'Skinny::setSkin');
+    $parser->setFunctionHook('layout', 'Skinny::setLayout');
     $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
     return true;
   }
@@ -45,6 +78,12 @@ class Skinny{
   //Parser function: {{#setskin: skin-name}}
   public static function setSkin($parser, $skin){
     $content = 'SETSKIN:'.$skin.':NIKSTES';
+    return array( $content, 'noparse' => true, 'isHTML' => true );
+  }
+
+  //Parser function: {{#skin variant: skin-name}}
+  public static function setLayout($parser, $variant){
+    $content = 'LAYOUT:'.$variant.':TUOYAL';
     return array( $content, 'noparse' => true, 'isHTML' => true );
   }
 
@@ -85,6 +124,7 @@ class Skinny{
   public static function run($out, &$html){
     $html = self::processMoveContent($html);
     $html = self::processSetSkin($html);
+    $html = self::processSetSkinVariant($html);
     if(self::$options['extract toc']){
       $html = self::extractTOC($html);
     }
@@ -152,11 +192,39 @@ class Skinny{
     return $html;
   }
 
+    //check the html for any set skin tokens
+  protected static function processSetSkinVariant($html){
+    $pattern = '~LAYOUT:([\w_-]+):TUOYAL~m';
+    if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
+      $variant = array_pop($matches);
+      self::$skinVariant = $variant[1];
+      $html = preg_replace($pattern, '', $html);
+    }
+    return $html;
+  }
+
   //hook for RequestContextCreateSkin
   public static function getSkin($context, &$skin){
-    if(self::$pageSkin){
-      $skin = self::$pageSkin;
+    global $wgDefaultSkin, $wgValidSkinNames;
+   
+    $key = $wgDefaultSkin;
+    if( self::$pageSkin ){
+      $key = new self::$pageSkin;
     }
+
+    $key = Skin::normalizeKey( $key );
+
+    $skinNames = Skin::getSkinNames();
+    $skinName = $skinNames[$key];
+    $className = "Skin{$skinName}";
+
+    $options = array();
+    if( self::$skinVariant ){
+      $options['layout'] = self::$skinVariant;
+    }
+
+    $skin = new $className( $options );
+
     return true;
   }
 

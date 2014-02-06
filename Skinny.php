@@ -10,6 +10,7 @@
  *
  */
 $wgAutoloadClasses['Skinny'] = dirname(__FILE__) . '/Skinny.class.php';
+$wgAutoloadClasses['SkinSkinny'] = dirname(__FILE__) . '/Skinny.skin.php';
 $wgAutoloadClasses['SkinnyTemplate'] = dirname(__FILE__) . '/Skinny.template.php';
 $wgAutoloadClasses['SkinnySlim'] = dirname(__FILE__) . '/Skinny.slim.php';
 
@@ -21,6 +22,9 @@ $wgHooks['ParserFirstCallInit'][] = 'Skinny::parserInit';
 $wgHooks['OutputPageBeforeHTML'][] = 'Skinny::run';
 $wgHooks['RequestContextCreateSkin'][] = 'Skinny::getSkin';
 
+$wgHooks['ResourceLoaderRegisterModules'][] = 'SkinSkinny::registerModules';
+
+
 $wgExtensionCredits['parserhook'][] = array(
    'path' => __FILE__,
    'name' => 'Skinny',
@@ -29,3 +33,5 @@ $wgExtensionCredits['parserhook'][] = array(
    'author' => 'Andru Vallance',
    'url' => 'https://www.mediawiki.org/wiki/Extension:Skinny'
 );
+
+Skinny::setOptions();
