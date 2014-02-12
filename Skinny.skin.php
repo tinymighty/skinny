@@ -141,7 +141,23 @@ class SkinSkinny extends SkinTemplate{
 		self::$layouts[$name] = $config;
 	}
 
+	/**
+	 * Set the layout config
+	 */
 	public static function setLayoutOptions( $name, $options ){
+		if( !isset(self::$layouts[$name]) ){
+			return;
+		}
+		if( isset($options['modules']) ){
+			self::addModules( $options['modules'] );
+		}
+		self::$layouts[$name] = Skinny::mergeOptionsArrays( self::$layouts[$name], $options );
+	}
+
+	/**
+	 * Set the options which will be passed to the layout's TemplateClass
+	 */
+	public static function setLayoutTemplateOptions( $name, $options ){
 		if(!isset(self::$layouts[$name])){
 			return;
 		}
@@ -190,6 +206,11 @@ class SkinSkinny extends SkinTemplate{
 		}
 	}
 
+	/**
+	 * Add ResourceLoader modules to a specified layout
+	 * They will be registered with ResourceLoader and automatically loaded
+	 * if the layout is active.
+	 */
 	public static function addModulesToLayout( $layout, $modules ){
 		self::addModules($modules);
 		self::$layouts[$layout]['modules'] += $modules;
