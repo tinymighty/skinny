@@ -14,8 +14,44 @@ class Skinny{
   public static $options=array();
   public static $content = array();
   protected static $pageSkin = null;
-  protected static $skinVariant = null;
+  protected static $skin;
+  protected static $skinLayout = null;
   
+  /*
+   * Handler for hook: ParserFirstCallInit
+   *
+   * Register the Skinny parser functions 
+   */
+  public static function ParserFirstCallInit(&$parser){
+    $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
+    $parser->setFunctionHook('setskin', 'Skinny::setSkin');
+    $parser->setFunctionHook('layout', 'Skinny::setLayout');
+    $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
+    return true;
+  }
+
+  /**
+   * Handler for hook: OutputPageBeforeHTML
+   *
+   * While this would ideally live in ParserBeforeTidy, that means our settings
+   * aren't loaded when a page is retrieved from the ParserCache, so we do it
+   * all here instead... 
+   *
+   * For reasons I'm yet to fathom, this hook is sometimes called before skin init
+   * and sometimes after.
+   */
+  public static function OutputPageBeforeHTML($out, &$html){
+    //echo $html; exit;
+    $html = self::processMoveContent($html);
+    if(self::$options['extract toc']){
+      $html = self::extractTOC($html);
+    }
+    $html = self::processSetSkin($html);
+    $html = self::processSetLayout($html);
+    return true;
+  }
+
+
   public static function setOptions( $options=array(), $reset=false ){
     if( $reset || empty(self::$options) ){
       //set all options to their defaults
@@ -53,13 +89,7 @@ class Skinny{
     return $new;
   }
 
-  public static function parserInit(&$parser){
-    $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
-    $parser->setFunctionHook('setskin', 'Skinny::setSkin');
-    $parser->setFunctionHook('layout', 'Skinny::setLayout');
-    $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
-    return true;
-  }
+
 
   public static function build( $path, $options=array() ){
     $options['template_path'] = $path;
@@ -77,13 +107,13 @@ class Skinny{
 
   //Parser function: {{#setskin: skin-name}}
   public static function setSkin($parser, $skin){
-    $content = 'SETSKIN:'.$skin.':NIKSTES';
+    $content = '<p>SETSKIN:'.$skin.':NIKSTES</p>';
     return array( $content, 'noparse' => true, 'isHTML' => true );
   }
 
   //Parser function: {{#skin variant: skin-name}}
   public static function setLayout($parser, $variant){
-    $content = 'LAYOUT:'.$variant.':TUOYAL';
+    $content = '<p>LAYOUT:'.$variant.':TUOYAL</p>';
     return array( $content, 'noparse' => true, 'isHTML' => true );
   }
 
@@ -117,19 +147,11 @@ class Skinny{
       return '';
     }else{
       //this will be stripped out, assuming the skin is based on Skinny.template
-      return 'ADDTEMPLATE:'.$template.':ETALPMETDDA';
+      return '<p>ADDTEMPLATE:'.$template.':ETALPMETDDA</p>';
     }
   }
   
-  public static function run($out, &$html){
-    $html = self::processMoveContent($html);
-    $html = self::processSetSkin($html);
-    $html = self::processSetSkinVariant($html);
-    if(self::$options['extract toc']){
-      $html = self::extractTOC($html);
-    }
-    return true;
-  }
+
 
   protected static function processMoveContent($html){
    if(empty($html))
@@ -183,21 +205,32 @@ class Skinny{
 
   //check the html for any set skin tokens
   protected static function processSetSkin($html){
-    $pattern = '~SETSKIN:([\w_-]+):NIKSTES~m';
+    $pattern = '~<p>SETSKIN:([\w_-]+):NIKSTES<\/p>~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
       $skin = array_pop($matches);
+
+      //if OutputPageBeforeHTML isn't called before RequestContextCreateSkin
+      //then this will have no effect... need a way to hack around the problem...
       self::$pageSkin = $skin[1];
+
       $html = preg_replace($pattern, '', $html);
     }
     return $html;
   }
 
     //check the html for any set skin tokens
-  protected static function processSetSkinVariant($html){
-    $pattern = '~LAYOUT:([\w_-]+):TUOYAL~m';
+  protected static function processSetLayout($html){
+    $pattern = '~<p>LAYOUT:([\w_-]+):TUOYAL<\/p>~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
-      $variant = array_pop($matches);
-      self::$skinVariant = $variant[1];
+      $layout = array_pop($matches);
+
+      //sometimes OutputPageBeforeHTML is called after skin init,
+      //sometimes before, so we allow for both
+      self::$skinLayout = $layout[1];
+      if(self::$skin){
+        self::$skin->setOptions(array('layout'=>$layout[1]));
+      }
+
       $html = preg_replace($pattern, '', $html);
     }
     return $html;
@@ -206,7 +239,7 @@ class Skinny{
   //hook for RequestContextCreateSkin
   public static function getSkin($context, &$skin){
     global $wgDefaultSkin, $wgValidSkinNames;
-   
+
     $key = $wgDefaultSkin;
     if( self::$pageSkin ){
       $key = new self::$pageSkin;
@@ -219,11 +252,13 @@ class Skinny{
     $className = "Skin{$skinName}";
 
     $options = array();
-    if( self::$skinVariant ){
-      $options['layout'] = self::$skinVariant;
+    if( self::$skinLayout ){
+      $options['layout'] = self::$skinLayout;
     }
-
+    //echo self::$skinLayout; print_r($options);// exit;
     $skin = new $className( $options );
+
+    self::$skin = $skin;
 
     return true;
   }

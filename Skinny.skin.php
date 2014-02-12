@@ -41,6 +41,10 @@ class SkinSkinny extends SkinTemplate{
 	function __construct( $options=array() ){
 		$this->setOptions( $options );
 
+		/*if(isset(Skinny::$skinLayout)){
+			$this->options['layout'] = Skinny::$skinLayout;
+		}*/
+
 		$layout = $this->layout = self::$layouts[ $this->options['layout'] ];
 		//allow a layout to provide a custom template class
 		if( isset($layout['templateClass']) ){
@@ -61,16 +65,20 @@ class SkinSkinny extends SkinTemplate{
 	  * Load required modules with ResourceLoader
 	  */ 
 	public function initPage( OutputPage $out ){
-				//load custom modules
-		/*if(!empty(self::$modules)){
-			foreach( array_keys(self::$modules) as $name){
-				$out->addModules($name);
-			}
-		}*/
+
 		$loadModules = array();
 		if( isset( $this->layout['modules'] ) ){
-			$loadModules = array_keys( $this->layout['modules'] );
+			$loadModules += array_keys( $this->layout['modules'] );
 		}
+
+		$layout = $this->layout;
+		while( isset($layout['extends']) ){
+			$layout = self::$layouts[ $layout['extends'] ];
+			if(!empty($layout['modules'])){
+				$loadModules += array_keys($layout['modules']); 
+			}
+		}
+
 		$loadModules += self::$autoloadModules;
 
 		foreach( $loadModules as $name ){
@@ -83,10 +91,15 @@ class SkinSkinny extends SkinTemplate{
 	 * and ensure it's initialized with the options it needs.
 	 */
 	public function setupTemplate( $classname, $repository = false, $cache_dir = false ) {
+		$this->layout = self::$layouts[ $this->options['layout'] ];	
 		//allow current layout to specify a different template class
 		$classname = isset($this->layout['templateClass']) ? $this->layout['templateClass'] : $classname;
+		$options = array();
+		if( isset($this->layout['templateOptions']) ){
+			$options += $this->layout['templateOptions'];
+		}
 		//instantiate template with the skin options
-		$tpl = new $classname( $this->options );
+		$tpl = new $classname( $options );
 		//ensure that all template paths registered to this skin are added to the template
 		//this allows overriding templates without having to create a new template class
 		foreach(self::$template_paths as $path){
@@ -99,19 +112,53 @@ class SkinSkinny extends SkinTemplate{
 	 * Called by OutputPage to provide opportunity to add to body attrs
 	 */
 	public function addToBodyAttributes( $out, &$attrs){
-		$attrs['class'] .= ' layout-'.$this->options['layout'];
+		$classes = array();
+		$layout = $this->layout;
+		//print_r($layout); exit;
+		while( isset($layout['extends']) ){
+			$layout = self::$layouts[ $layout['extends'] ];
+			$classes[] = 'layout-'.$layout['name']; 
+		}
+
+		$classes[] = 'layout-'.$this->layout['name'];
+
+
+		$attrs['class'] .= ' '.implode(' ',$classes);
+
 	}
 
 	/**
 	 * Add a new skin layout for this skin
 	 */
 	public static function addLayout($name, $config=array()){
-		if(isset($config['modules'])){
+		if( isset($config['modules']) && !empty($config['modules']) ){
 			self::addModules($config['modules']);
+		}else{
+			$config['modules'] = array();
 		}
+		$config['name'] = $name;
+
 		self::$layouts[$name] = $config;
 	}
 
+	public static function setLayoutOptions( $name, $options ){
+		if(!isset(self::$layouts[$name])){
+			return;
+		}
+		if(!isset(self::$layouts[$name]['templateOptions'])){
+			self::$layouts[$name]['templateOptions'] = array();
+		}
+		self::$layouts[$name]['templateOptions'] = Skinny::mergeOptionsArrays( self::$layouts[$name]['templateOptions'], $options );
+	}
+
+
+	/**
+	 * Create a new layout which inherits from an existing layout
+	 */
+	public static function extendLayout($extend, $name, $config=array()){
+		$config['extends'] = $extend;
+		self::addLayout($name, $config);
+	}
 
 
 	public static function addTemplatePath( $path ){
@@ -134,6 +181,9 @@ class SkinSkinny extends SkinTemplate{
 		if( self::$_modulesRegistered ){
 			throw new Exception('Skin is attempting to add modules after modules have already been registered.');
 		}
+		if(empty($modules)){
+			return;
+		}
 		self::$modules += (array) $modules;
 		if($load){
 			self::$autoloadModules += array_keys($modules);
@@ -141,9 +191,6 @@ class SkinSkinny extends SkinTemplate{
 	}
 
 	public static function addModulesToLayout( $layout, $modules ){
-		if(!isset(self::$layouts[$layout]['modules'])){
-			self::$layouts[$layout]['modules'] = array();
-		}
 		self::addModules($modules);
 		self::$layouts[$layout]['modules'] += $modules;
 	}

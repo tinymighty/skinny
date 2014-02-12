@@ -18,8 +18,9 @@ $wgAutoloadClasses['SkinnySlim'] = dirname(__FILE__) . '/Skinny.slim.php';
 $wgExtensionMessagesFiles['SkinnyMagic'] = dirname( __FILE__ ) . '/Skinny.i18n.magic.php';
 $wgExtensionMessagesFiles['Skinny'] = dirname( __FILE__ ) . '/Skinny.i18n.php';
 
-$wgHooks['ParserFirstCallInit'][] = 'Skinny::parserInit';
-$wgHooks['OutputPageBeforeHTML'][] = 'Skinny::run';
+$wgHooks['ParserFirstCallInit'][] = 'Skinny::ParserFirstCallInit';
+$wgHooks['OutputPageBeforeHTML'][] = 'Skinny::OutputPageBeforeHTML';
+
 $wgHooks['RequestContextCreateSkin'][] = 'Skinny::getSkin';
 
 $wgHooks['ResourceLoaderRegisterModules'][] = 'SkinSkinny::registerModules';

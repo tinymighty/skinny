@@ -312,7 +312,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
   //parse the bodytext and insert any templates added by the skintemplate parser function
   public function parseContent( $html ){
-    $pattern = '~ADDTEMPLATE:([\w_-]+):ETALPMETDDA~m';
+    $pattern = '~<p>ADDTEMPLATE:([\w_-]+):ETALPMETDDA<\/p>~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
       foreach($matches as $match){
         $html = str_replace($match[0], $this->renderTemplate($match[1]), $html);
