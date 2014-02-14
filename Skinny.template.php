@@ -326,7 +326,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
   Builds on Skin::addToSidebar to move all headerless entries into the primary navigation*/
   protected function processNavigationFromMessage( $message_name ){
   	$nav = array();
-  	$this->getSkin()->addToSidebar(&$nav, $message_name);
+  	$this->getSkin()->addToSidebar($nav, $message_name);
 
   	return $nav;
   }
