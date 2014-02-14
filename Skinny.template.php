@@ -270,7 +270,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 						//method will be called with two arrays as arguments
 						//the first is the args passed to this method (ie. in a template call to $this->insert() )
 						//the second are the args passed when the hook was bound
-						$content .= call_user_method_array($item['hook'][0], $item['hook'][1], array($args, $item['arguments']));
+						$content .= call_user_func_array(array($item['hook'][1], $item['hook'][0]), array($args, $item['arguments']));
 						break;
 					case 'html':
 						$content .= $sep . (string) $item['html'];
