@@ -38,6 +38,27 @@ class SkinSkinny extends SkinTemplate{
 	);
 	public $options = array();
 
+
+	/**
+	 * Register resources with the ResourceLoader. 
+	 * 
+	 * Handler for Hook: ResourceLoaderRegisterModules hook.
+	 */
+	public static function ResourceLoaderRegisterModules( ResourceLoader $rl ){
+		self::$_modulesRegistered = true;
+		$rl->register( self::$modules );
+    return true;
+	}
+
+	/**
+	 * Can be used to init a skin before the Skin is instantiated
+ * eg. to define resources.
+	 */
+	public static function init(){
+
+	}
+
+
 	function __construct( $options=array() ){
 		$this->setOptions( $options );
 
@@ -84,6 +105,8 @@ class SkinSkinny extends SkinTemplate{
 		foreach( $loadModules as $name ){
 			$out->addModules($name);
 		}
+
+		//echo '<pre>'; print_r($out->getModules(true));
 	} 
 
 	/**
@@ -181,14 +204,6 @@ class SkinSkinny extends SkinTemplate{
 		self::$template_paths[] = $path;
 	}
 
-	/**
-	 * Register resources. This method is called by the ResourceLoaderRegisterModules hook.
-	 */
-	public static function registerModules( ResourceLoader $rl ){
-		self::$_modulesRegistered = true;
-		$rl->register( self::$modules );
-    return true;
-	}
 
 	/**
 	 * Build a list of modules to be registered to the ResourceLoader when it initializes.

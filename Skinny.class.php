@@ -17,6 +17,14 @@ class Skinny{
   protected static $skin;
   protected static $skinLayout = null;
   
+  /**
+   * Initialization. Hook for BeforeInitialize
+   */
+  public static function init(&$title, $unused, &$output, &$user, $request, $mediaWiki){
+    self::setOptions();
+    return true;
+  }
+
   /*
    * Handler for hook: ParserFirstCallInit
    *

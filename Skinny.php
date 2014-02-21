@@ -9,21 +9,22 @@
  * License: GPL - http://www.gnu.org/copyleft/gpl.html
  *
  */
-$wgAutoloadClasses['Skinny'] = dirname(__FILE__) . '/Skinny.class.php';
-$wgAutoloadClasses['SkinSkinny'] = dirname(__FILE__) . '/Skinny.skin.php';
-$wgAutoloadClasses['SkinnyTemplate'] = dirname(__FILE__) . '/Skinny.template.php';
-$wgAutoloadClasses['SkinnySlim'] = dirname(__FILE__) . '/Skinny.slim.php';
+$wgAutoloadClasses['Skinny'] = __DIR__ . '/Skinny.class.php';
+$wgAutoloadClasses['SkinSkinny'] = __DIR__ . '/Skinny.skin.php';
+$wgAutoloadClasses['SkinnyTemplate'] = __DIR__ . '/Skinny.template.php';
+$wgAutoloadClasses['SkinnySlim'] = __DIR__ . '/Skinny.slim.php';
 
 
-$wgExtensionMessagesFiles['SkinnyMagic'] = dirname( __FILE__ ) . '/Skinny.i18n.magic.php';
-$wgExtensionMessagesFiles['Skinny'] = dirname( __FILE__ ) . '/Skinny.i18n.php';
+$wgExtensionMessagesFiles['SkinnyMagic'] = __DIR__ . '/Skinny.i18n.magic.php';
+$wgExtensionMessagesFiles['Skinny'] = __DIR__ . '/Skinny.i18n.php';
 
+$wgHooks['BeforeInitialize'][] = 'Skinny::init';
 $wgHooks['ParserFirstCallInit'][] = 'Skinny::ParserFirstCallInit';
 $wgHooks['OutputPageBeforeHTML'][] = 'Skinny::OutputPageBeforeHTML';
 
 $wgHooks['RequestContextCreateSkin'][] = 'Skinny::getSkin';
 
-$wgHooks['ResourceLoaderRegisterModules'][] = 'SkinSkinny::registerModules';
+$wgHooks['ResourceLoaderRegisterModules'][] = 'SkinSkinny::ResourceLoaderRegisterModules';
 
 
 $wgExtensionCredits['parserhook'][] = array(
@@ -35,4 +36,4 @@ $wgExtensionCredits['parserhook'][] = array(
    'url' => 'https://www.mediawiki.org/wiki/Extension:Skinny'
 );
 
-Skinny::setOptions();
+
