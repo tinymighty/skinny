@@ -135,9 +135,11 @@ class SkinSkinny extends SkinTemplate{
 	 * Called by OutputPage to provide opportunity to add to body attrs
 	 */
 	public function addToBodyAttributes( $out, &$attrs){
+		global $wgSitename;
 		$classes = array();
 		$layout = $this->layout;
 		//print_r($layout); exit;
+		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$wgSitename));
 		while( isset($layout['extends']) ){
 			$layout = self::$layouts[ $layout['extends'] ];
 			$classes[] = 'layout-'.$layout['name']; 
