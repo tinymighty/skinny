@@ -35,6 +35,8 @@ class Skinny{
     $parser->setFunctionHook('setskin', 'Skinny::setSkin');
     $parser->setFunctionHook('layout', 'Skinny::setLayout');
     $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
+    $parser->setFunctionHook('imageurl', 'Skinny::getImageURL');
+
     return true;
   }
 
@@ -157,6 +159,15 @@ class Skinny{
       //this will be stripped out, assuming the skin is based on Skinny.template
       return '<p>ADDTEMPLATE:'.$template.':ETALPMETDDA</p>';
     }
+  }
+
+  function getImageURL ( &$parser, $name = '', $arg = 'abs' ) {
+    global $wgServer;
+    $img = Image::newFromName( $name );
+    if($img!==NULL){
+      return (  trim($arg==='abs') ? $wgServer : '') . $img->getURL();
+    }
+    return '';
   }
   
 
