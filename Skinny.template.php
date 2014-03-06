@@ -23,7 +23,8 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		'show tagline' => true,
 
 		'breadcrumbs'=>array(
-			'enabled'=>true
+			'enabled'=>true,
+			'zone' => 'prepend:title'
 		)
 	);
 
