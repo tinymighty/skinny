@@ -129,36 +129,13 @@ class Skinny{
 
   //Parser function: {{#skintemplate:template-name|argument=value|argument=value}}
   //render a template from a skin template file...
-  public static function insertTemplate($parser, $template, $spot=false){
+  public static function insertTemplate($parser, $template, $spot=''){
     //process additional arguments into a usable array
-
-    /*
-    //Using these arguments means passing them through extract()
-    //Until we can find a secure way to sanitize the input, it's a no-go
-    $args = func_get_args();
-    $args = array_slice($args, 2, count($args) );
     $params = array();
-    foreach($args as $a){
-      if(strpos($a, '=')){
-        $exploded = explode('=', $a);
-        $params[trim($exploded[0])] = trim($exploded[1]);
-      }
-    }*/
-    $params = array();
-
     //sanitize the template name
     $template = preg_replace('/[^A-Za-z0-9_\-]/', '_', $template);
-
-    if($spot){
-      if(!isset(self::$content[$spot])){
-        self::$content[$spot] = array();
-      }
-      self::$content[$spot][] = array('template'=>$template, 'params'=>$params);
-      return '';
-    }else{
-      //this will be stripped out, assuming the skin is based on Skinny.template
-      return '<p>ADDTEMPLATE:'.$template.':ETALPMETDDA</p>';
-    }
+    //this will be stripped out, assuming the skin is based on Skinny.template
+    return '<p>ADDTEMPLATE('.$spot.'):'.$template.':ETALPMETDDA</p>';
   }
 
   function getImageURL ( &$parser, $name = '', $arg = 'abs' ) {
@@ -220,8 +197,6 @@ class Skinny{
     return $html;
   }
 
-
-
   //check the html for any set skin tokens
   protected static function processSetSkin($html){
     $pattern = '~<p>SETSKIN:([\w_-]+):NIKSTES<\/p>~m';
@@ -237,7 +212,7 @@ class Skinny{
     return $html;
   }
 
-    //check the html for any set skin tokens
+  //check the html for any set skin tokens
   protected static function processSetLayout($html){
     $pattern = '~<p>LAYOUT:([\w_-]+):TUOYAL<\/p>~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){

@@ -93,8 +93,9 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	 * This is called by MediaWiki to render the skin.
 	 */
 	final function execute() {
+		//parse content first, to allow for any ADDTEMPLATE items
+		$content = $this->parseContent($this->data['bodytext']);
 		//set up standard content zones
-
 		//head element (including opening body tag)
 		$this->addHTML('head', $this->data[ 'headelement' ]);
 		//the logo image defined in LocalSettings
@@ -107,7 +108,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 			));
 		}
 		//article content
-		$this->addHTML('content', $this->parseContent($this->data['bodytext']));
+		$this->addHTML('content', $content);
 		//the site notice
 		if( !empty($this->data['sitenotice'])){
 			$this->addTemplate('notice', 'site-notice', array(
@@ -313,10 +314,17 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
   //parse the bodytext and insert any templates added by the skintemplate parser function
   public function parseContent( $html ){
-    $pattern = '~<p>ADDTEMPLATE:([\w_-]+):ETALPMETDDA<\/p>~m';
+    $pattern = '~<p>ADDTEMPLATE\(([\w_:-]*)\):([\w_-]+):ETALPMETDDA<\/p>~m';
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
       foreach($matches as $match){
-        $html = str_replace($match[0], $this->renderTemplate($match[1]), $html);
+      	//if a zone is specified, attach the template
+      	if(!empty($match[1])){
+      		$this->addTemplate($match[1], $match[2]);
+      		$html = str_replace($match[0], '', $html);
+        }else{
+        //otherwise inject the template inline into the wikitext
+        	$html = str_replace($match[0], $this->renderTemplate($match[2]), $html);
+      	}
       }
     }
     return $html;
