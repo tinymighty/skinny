@@ -135,7 +135,7 @@ class SkinSkinny extends SkinTemplate{
 	 * Called by OutputPage to provide opportunity to add to body attrs
 	 */
 	public function addToBodyAttributes( $out, &$attrs){
-		global $wgSitename;
+		global $wgSitename, $wgUser;
 		$classes = array();
 		$layout = $this->layout;
 		//print_r($layout); exit;
@@ -147,6 +147,11 @@ class SkinSkinny extends SkinTemplate{
 
 		$classes[] = 'layout-'.$this->layout['name'];
 
+		if( $wgUser->isLoggedIn() ){
+			$classes[] = 'user-loggedin';
+		}else{
+			$classes[] = 'user-anonymous';
+		}
 
 		$attrs['class'] .= ' '.implode(' ',$classes);
 
