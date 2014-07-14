@@ -234,24 +234,26 @@ class Skinny{
   public static function getSkin($context, &$skin){
     global $wgDefaultSkin, $wgValidSkinNames;
 
-    $key = $wgDefaultSkin;
-    if( self::$pageSkin ){
-      $key = new self::$pageSkin;
+    //there's probably a better way to check for this...
+    if(!isset($_GET['useskin'])){
+      $key = $wgDefaultSkin;
+      if( self::$pageSkin ){
+        $key = new self::$pageSkin;
+      }
+
+      $key = Skin::normalizeKey( $key );
+
+      $skinNames = Skin::getSkinNames();
+      $skinName = $skinNames[$key];
+      $className = "Skin{$skinName}";
+
+      $options = array();
+      if( self::$skinLayout ){
+        $options['layout'] = self::$skinLayout;
+      }
+      //echo self::$skinLayout; print_r($options);// exit;
+      $skin = new $className( $options );
     }
-
-    $key = Skin::normalizeKey( $key );
-
-    $skinNames = Skin::getSkinNames();
-    $skinName = $skinNames[$key];
-    $className = "Skin{$skinName}";
-
-    $options = array();
-    if( self::$skinLayout ){
-      $options['layout'] = self::$skinLayout;
-    }
-    //echo self::$skinLayout; print_r($options);// exit;
-    $skin = new $className( $options );
-
     self::$skin = $skin;
 
     return true;
