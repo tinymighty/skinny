@@ -139,10 +139,10 @@ class Skinny{
   }
 
   function getImageURL ( &$parser, $name = '', $arg = 'abs' ) {
-    global $wgServer;
+    global $GLOBALS['wgServer'];
     $img = Image::newFromName( $name );
     if($img!==NULL){
-      return (  trim($arg==='abs') ? $wgServer : '') . $img->getURL();
+      return (  trim($arg==='abs') ? $GLOBALS['wgServer'] : '') . $img->getURL();
     }
     return '';
   }
@@ -232,11 +232,10 @@ class Skinny{
 
   //hook for RequestContextCreateSkin
   public static function getSkin($context, &$skin){
-    global $wgDefaultSkin, $wgValidSkinNames;
 
     //there's probably a better way to check for this...
     if(!isset($_GET['useskin'])){
-      $key = $wgDefaultSkin;
+      $key = $GLOBALS['wgDefaultSkin'];
       if( self::$pageSkin ){
         $key = new self::$pageSkin;
       }

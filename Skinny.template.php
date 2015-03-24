@@ -257,8 +257,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	 * Transclude a MediaWiki page
 	 */
 	function transclude($string){
-		global $wgParser;
-		echo $wgParser->parse('{{'.$string.'}}', $this->getSkin()->getRelevantTitle(), new ParserOptions)->getText();
+		echo $GLOBALS['wgParser']->parse('{{'.$string.'}}', $this->getSkin()->getRelevantTitle(), new ParserOptions)->getText();
 	}
 
 	/**
