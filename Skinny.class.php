@@ -139,7 +139,6 @@ class Skinny{
   }
 
   function getImageURL ( &$parser, $name = '', $arg = 'abs' ) {
-    global $GLOBALS['wgServer'];
     $img = Image::newFromName( $name );
     if($img!==NULL){
       return (  trim($arg==='abs') ? $GLOBALS['wgServer'] : '') . $img->getURL();
