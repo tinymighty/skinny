@@ -62,7 +62,7 @@ class Skinny{
   }
 
 
-  public static function setOptions( $options=array(), $reset=false ){
+  public static function setOptions( Array $options=array(), $reset=false ){
     if( $reset || empty(self::$options) ){
       //set all options to their defaults
       self::$options = self::$defaults;
