@@ -1,17 +1,18 @@
 <?php
+namespace Skinny;
 /**
  * SkinnyTemplate provides a bit of flair to good old BaseTemplate. Use it to create
- * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate 
- * move content from your wikitext to your skin, and to safely render php templates in your 
+ * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate
+ * move content from your wikitext to your skin, and to safely render php templates in your
  * wikitext for easily and safely adding advanced forms, javascript, and so on.
  *
- * It extracts all the usual MediaWiki skin html soup into re-usable template files in the 
+ * It extracts all the usual MediaWiki skin html soup into re-usable template files in the
  * template directory, and introduces add() and insert() as methods for handling content
  * display.
  *
  * Check out the documentation at http://mediawiki.net/wiki/Extension:Skinny
  */
-class SkinnySlim {
+class Slim {
 
 	protected $settings = array(
 		'debug' => false,
@@ -23,7 +24,7 @@ class SkinnySlim {
 	protected $_template_paths = array();
 
 	public function __construct( $options ){
-		
+
 		//set options
 		$options = $this->options = array_merge($this->settings, $this->options, $options);
 
@@ -172,7 +173,7 @@ class SkinnySlim {
 					case 'template':
 						$content .= $this->render($item['template'], $item['params']);
 						break;
-				}	
+				}
 
 			}
 		}
@@ -203,4 +204,3 @@ class SkinnySlim {
 
 
 } // end of class
-

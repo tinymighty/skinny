@@ -4,9 +4,9 @@
  */
 class Skinny{
 
-  //singleton
+  //static class
   private function __construct(){}
-  
+
   protected static $defaults=array(
     'extract toc' => false,
     'remove toc' => false
@@ -16,7 +16,7 @@ class Skinny{
   protected static $pageSkin = null;
   protected static $skin;
   protected static $skinLayout = null;
-  
+
   /**
    * Initialization. Hook for BeforeInitialize
    */
@@ -28,7 +28,7 @@ class Skinny{
   /*
    * Handler for hook: ParserFirstCallInit
    *
-   * Register the Skinny parser functions 
+   * Register the Skinny parser functions
    */
   public static function ParserFirstCallInit(&$parser){
     $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
@@ -45,7 +45,7 @@ class Skinny{
    *
    * While this would ideally live in ParserBeforeTidy, that means our settings
    * aren't loaded when a page is retrieved from the ParserCache, so we do it
-   * all here instead... 
+   * all here instead...
    *
    * For reasons I'm yet to fathom, this hook is sometimes called before skin init
    * and sometimes after.
@@ -103,7 +103,7 @@ class Skinny{
 
   public static function build( $path, $options=array() ){
     $options['template_path'] = $path;
-    return new SkinnySlim( $options );
+    return new Slim( $options );
   }
 
   //Parser function: {{#movetoskin: target | content}}
@@ -145,7 +145,7 @@ class Skinny{
     }
     return '';
   }
-  
+
 
 
   protected static function processMoveContent($html){
@@ -158,7 +158,7 @@ class Skinny{
           self::$content[ $match[1] ] = array();
         }
         array_push( self::$content[ $match[1] ] , array(
-          'html' => $match[2] 
+          'html' => $match[2]
         ));
         $html = str_replace($match[0], '', $html);
       }
@@ -166,13 +166,13 @@ class Skinny{
 
     return $html;
   }
-    
+
   public static function hasContent($target){
     if(isset(self::$content[$target]))
       return true;
     return false;
   }
-  
+
   public static function getContent($target=null){
     if($target!==null){
       if( self::hasContent($target) )
@@ -186,7 +186,7 @@ class Skinny{
     //a super hacky way to grab the TOC.  If the TOC HTML is changed in future versions this will break.
     //just grabs everything from <div id="toc" to </li></ul></div>
     if( preg_match('~<div id="toc"([\S\s]*?)</li>\n\s*</ul>\n\s*</div>~mi', $html, $match)){
-      
+
       if(self::$options['remove toc']){
         $html = str_replace($match[0], '', $html);
       }
@@ -239,11 +239,11 @@ class Skinny{
         $key = new self::$pageSkin;
       }
 
-      $key = Skin::normalizeKey( $key );
+      $key = \Skin::normalizeKey( $key );
 
-      $skinNames = Skin::getSkinNames();
+      $skinNames = \Skin::getSkinNames();
       $skinName = $skinNames[$key];
-      $className = "Skin{$skinName}";
+      $className = "\Skin{$skinName}";
 
       $options = array();
       if( self::$skinLayout ){

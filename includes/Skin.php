@@ -1,12 +1,12 @@
 <?php
-
-class SkinSkinny extends SkinTemplate{
+namespace Skinny;
+class Skin extends \SkinTemplate{
 
 	/**
 	 * A register of valid skin layouts: key=>config
 	 */
 	protected static $layouts = array();
-	
+
 	/**
 	 * An array of modules to be loaded by ResourceLoader
 	 */
@@ -22,8 +22,8 @@ class SkinSkinny extends SkinTemplate{
 	 * An array of modules to be loaded by ResourceLoader
 	 */
 	protected static $template_paths = array();
-	
-	
+
+
 	/**
 	 * Boolean to track whether ResourceLoader modules have been added
 	 */
@@ -40,11 +40,11 @@ class SkinSkinny extends SkinTemplate{
 
 
 	/**
-	 * Register resources with the ResourceLoader. 
-	 * 
+	 * Register resources with the ResourceLoader.
+	 *
 	 * Handler for Hook: ResourceLoaderRegisterModules hook.
 	 */
-	public static function ResourceLoaderRegisterModules( ResourceLoader $rl ){
+	public static function ResourceLoaderRegisterModules( \ResourceLoader $rl ){
 		self::$_modulesRegistered = true;
 		$rl->register( self::$modules );
     return true;
@@ -79,13 +79,13 @@ class SkinSkinny extends SkinTemplate{
 			//set all options to their defaults
 			$this->options = $this->defaults;
 		}
-		$this->options = Skinny::mergeOptionsArrays( $this->options, $options );
+		$this->options = \Skinny::mergeOptionsArrays( $this->options, $options );
 	}
 
 	/**
 	  * Load required modules with ResourceLoader
-	  */ 
-	public function initPage( OutputPage $out ){
+	  */
+	public function initPage( \OutputPage $out ){
 
 		$loadModules = array();
 		if( isset( $this->layout['modules'] ) ){
@@ -96,7 +96,7 @@ class SkinSkinny extends SkinTemplate{
 		while( isset($layout['extends']) ){
 			$layout = self::$layouts[ $layout['extends'] ];
 			if(!empty($layout['modules'])){
-				$loadModules += array_keys($layout['modules']); 
+				$loadModules += array_keys($layout['modules']);
 			}
 		}
 
@@ -107,14 +107,14 @@ class SkinSkinny extends SkinTemplate{
 		}
 
 		//echo '<pre>'; print_r($out->getModules(true));
-	} 
+	}
 
 	/**
 	 * Hooking into the template setup process to provide a custom template
 	 * and ensure it's initialized with the options it needs.
 	 */
 	public function setupTemplate( $classname, $repository = false, $cache_dir = false ) {
-		$this->layout = self::$layouts[ $this->options['layout'] ];	
+		$this->layout = self::$layouts[ $this->options['layout'] ];
 		//allow current layout to specify a different template class
 		$classname = isset($this->layout['templateClass']) ? $this->layout['templateClass'] : $classname;
 		$options = array();
@@ -141,7 +141,7 @@ class SkinSkinny extends SkinTemplate{
 		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$GLOBALS['wgSitename']));
 		while( isset($layout['extends']) ){
 			$layout = self::$layouts[ $layout['extends'] ];
-			$classes[] = 'layout-'.$layout['name']; 
+			$classes[] = 'layout-'.$layout['name'];
 		}
 
 		$classes[] = 'layout-'.$this->layout['name'];
@@ -180,7 +180,7 @@ class SkinSkinny extends SkinTemplate{
 		if( isset($options['modules']) ){
 			self::addModules( $options['modules'] );
 		}
-		self::$layouts[$name] = Skinny::mergeOptionsArrays( self::$layouts[$name], $options );
+		self::$layouts[$name] = \Skinny::mergeOptionsArrays( self::$layouts[$name], $options );
 	}
 
 	/**
@@ -193,7 +193,7 @@ class SkinSkinny extends SkinTemplate{
 		if(!isset(self::$layouts[$name]['templateOptions'])){
 			self::$layouts[$name]['templateOptions'] = array();
 		}
-		self::$layouts[$name]['templateOptions'] = Skinny::mergeOptionsArrays( self::$layouts[$name]['templateOptions'], $options );
+		self::$layouts[$name]['templateOptions'] = \Skinny::mergeOptionsArrays( self::$layouts[$name]['templateOptions'], $options );
 	}
 
 
@@ -241,4 +241,3 @@ class SkinSkinny extends SkinTemplate{
 		self::$autoloadModules += $module_names;
 	}
 }
-

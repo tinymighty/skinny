@@ -1,17 +1,18 @@
 <?php
+namespace Skinny;
 /**
  * SkinnyTemplate provides a bit of flair to good old BaseTemplate. Use it to create
- * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate 
- * move content from your wikitext to your skin, and to safely render php templates in your 
+ * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate
+ * move content from your wikitext to your skin, and to safely render php templates in your
  * wikitext for easily and safely adding advanced forms, javascript, and so on.
  *
- * It extracts all the usual MediaWiki skin html soup into re-usable template files in the 
+ * It extracts all the usual MediaWiki skin html soup into re-usable template files in the
  * template directory, and introduces add() and insert() as methods for handling content
  * display.
  *
  * Check out the documentation at http://mediawiki.net/wiki/Extension:Skinny
  */
-abstract class SkinnyTemplate extends BaseTemplate {
+abstract class Template extends \BaseTemplate {
 
 	//core settings
 	protected $defaults = array(
@@ -43,7 +44,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		//adding path manually ensures that there's an entry for every class in the heirarchy
 		//allowing for template fallback to every skin all the way down
 		$this->addTemplatePath( dirname(__FILE__).'/templates' );
-		
+
 		foreach($this->options['template paths'] as $path){
 			$this->addTemplatePath($path);
 		}
@@ -54,7 +55,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 			//merge all defaults in, starting from the most recently added
 			//this means children's defaults override their parents
 			while($defaults = array_pop($this->_defaults) ){
-				$this->defaults = $this->mergeOptionsArrays( $this->defaults, $defaults ); 
+				$this->defaults = $this->mergeOptionsArrays( $this->defaults, $defaults );
 			}
 		}
 	}
@@ -62,7 +63,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 	//recursively merge arrays, but if there are key conflicts,
 	//overwrite from right to left
 	public function mergeOptionsArrays($left, $right){
-		return Skinny::mergeOptionsArrays($left, $right);
+		return \Skinny::mergeOptionsArrays($left, $right);
 	}
 
 	public function setOptions($options, $reset=false){
@@ -100,7 +101,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		$this->addHTML('head', $this->data[ 'headelement' ]);
 		//the logo image defined in LocalSettings
 		$this->addHTML('logo', $this->data['logopath']);
-		//the article title 
+		//the article title
 		if($this->options['show title']){
 			$this->addHTML('content-container.class', 'has-title');
 			$this->addTemplate('title', 'title', array(
@@ -135,13 +136,13 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
 		//page footer
 		$this->addTemplate('footer', 'footer', array(
-			'icons'=>$this->getFooterIcons( "icononly" ), 
+			'icons'=>$this->getFooterIcons( "icononly" ),
 			'links'=>$this->getFooterLinks( "flat" )
 		));
 		//mediawiki needs this to inject script tags after the footer
 		$this->addHook('after:footer', 'afterFooter');
 
-		
+
 		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
 
 		//allow skins to set up before render
@@ -158,7 +159,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 		ob_start();
 		extract($args);
 		if($this->options['debug']===true){
-			echo '<div class="skinny-debug">Skinny:Template: '.$template.'</div>';
+			echo '<div class="skinny-debug">\Skinny\Template: '.$template.'</div>';
 		}
 		//try all defined template paths
 		$exists = false;
@@ -289,13 +290,13 @@ abstract class SkinnyTemplate extends BaseTemplate {
 					case 'zone':
 						$content .= $this->render($item['zone'], $item['params']);
 						break;
-				}	
+				}
 
 			}
 		}
 		//content from #movetoskin and #skintemplate
-		if( Skinny::hasContent($zone) ){
-			foreach(Skinny::getContent($zone) as $item){
+		if( \Skinny::hasContent($zone) ){
+			foreach(\Skinny::getContent($zone) as $item){
 
 				//pre-rendered html from #movetoskin
 				if(isset($item['html'])){
@@ -336,7 +337,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
     return $html;
   }
 
-  /* 
+  /*
   Convert a MediaWiki:message into a navigation structure
   Builds on Skin::addToSidebar to move all headerless entries into the primary navigation*/
   protected function processNavigationFromMessage( $message_name ){
@@ -346,7 +347,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
   	return $nav;
   }
 
-  
+
   protected function afterFooter(){
 		ob_start();
 		$this->printTrail();
@@ -355,7 +356,7 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
 	/* Render the category heirarchy as breadcrumbs */
 	protected function breadcrumbs() {
-      
+
     // get category tree
     $parenttree = $this->getSkin()->getTitle()->getParentCategoryTree();
     $rendered = $this->getSkin()->drawCategoryBrowser( $parenttree );
@@ -385,4 +386,3 @@ abstract class SkinnyTemplate extends BaseTemplate {
 
 
 } // end of class
-
