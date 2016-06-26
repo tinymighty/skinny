@@ -7,57 +7,164 @@ define additional zones, etc...
 */
 abstract class Layout{
 
-  protected static $resourceModules = array();
+	protected static $resourceModules = array();
 
-  protected $templateDir = '/templates';
-  protected $templatePath;
+	protected static $templateDir = '/templates';
 
-  protected $mainTemplate = 'main';
+	protected $mainTemplateFile = 'main';
 
-  protected $skin;
-  protected $template;
+  protected $debug = false;
 
-  protected $content = array();
 
-  public static function getResourceModules () {
-    return static::$resourceModules;
+	protected $skin;
+	protected $template;
+
+	protected $content = array();
+
+	public static function getResourceModules () {
+		return static::$resourceModules;
+	}
+
+  public static function getTemplateDir () {
+    return static::$templateDir;
   }
 
-  function __construct (Skin $skin, Template $template) {
-    $this->skin = $skin;
-    $this->template = $template;
-    $this->templatePath = realpath(dirname(__FILE__).$this->templatePath);
-
-    $template->addTemplatePath($this->templatePath);
-
-    $this->initialize();
+  public function getMainTemplateFile () {
+    return $this->mainTemplateFile;
   }
 
-  public function initialize () {
+	function __construct (Skin $skin, Template $template) {
+		$this->skin = $skin;
+		$this->template = $template;
 
+		// add a template directory relative to the current class file
+		//$this->templatePath = realpath($this->getPath().$this->templateDir);
+
+		//$template->addTemplatePath($this->templatePath);
+
+		$this->initialize();
+	}
+
+	public function initialize () {
+
+	}
+
+	public function getSkin(){
+		return $this->skin;
+	}
+
+	public function getTemplate(){
+		return $this->template;
+	}
+
+	public function getContent(){
+		return $this->content;
+	}
+
+	public function getMsg ($msg) {
+		return $this->getTemplate()->getMsg($msg);
+	}
+
+  public function render () {
+    // TODO... provide a better access to data than this...
+    $this->data = $this->getTemplate()->data;
+    return $this->renderTemplate($this->getMainTemplateFile());
   }
 
-  public function getSkin(){
-    return $this->skin;
-  }
-
-  public function getTemplate(){
-    return $this->template;
-  }
-
-  public function getContent(){
-    return $this->content;
-  }
-
-  public function renderTemplateFile(String $path, Array $args=array()){
-    if (!file_exists($path)) {
-      return 'Template file '.$path.' does not exist';
+  public function renderTemplate($templateFile, Array $args=array()){
+    if($this->debug===true){
+      echo '<div class="skinny-debug">\Skinny\Template: '.$templateFile.'</div>';
     }
-    ob_start();
-    extract($args);
-    require( $path );
-    return ob_get_clean();
+
+    // follow class hierarchy of layouts to build a list of template paths
+    $templatePaths = [];
+    $parents = $this->getAncestors(get_class($this));
+    foreach ($parents as $p) {
+      $path = realpath($this->getClassPath($p).$p::getTemplateDir());
+      if ($path) {
+        $templatePaths[] = $path;
+      }
+    }
+
+    //try all defined template paths
+    $templatePath = false;
+    foreach($templatePaths as $path){
+      $filepath = $path.'/'.$templateFile.'.tpl.php';
+      if( is_file($filepath) ){
+        $templatePath = $filepath;
+        break; //once we've got a template, stop traversing template_paths
+      }
+    }
+    if($templatePath !== false){
+      ob_start();
+  		extract($args);
+  		require( $templatePath );
+  		$html = ob_get_clean();
+    }else{
+      echo $templatePath;
+      $html = 'Template file `'.$templateFile.'.tpl.php` not found!';
+    }
+    return $html;
   }
+
+  /**
+   * Render zone content, optionally passing arguments to provide to
+   * object methods
+   */
+  protected function renderZone($zone, $args=array()){
+    $sep = isset($args['seperator']) ? $args['seperator'] : ' ';
+
+    $content = '';
+    if(isset($this->content[$zone])){
+      foreach($this->content[$zone] as $item){
+        if($this->debug===true){
+          $content.='<!--Skinny:Template: '.$template.'-->';
+        }
+        switch($item['type']){
+          case 'hook':
+            //method will be called with two arrays as arguments
+            //the first is the args passed to this method (ie. in a template call to $this->insert() )
+            //the second are the args passed when the hook was bound
+            $content .= call_user_func_array(array($item['hook'][1], $item['hook'][0]), array($args, $item['arguments']));
+            break;
+          case 'html':
+            $content .= $sep . (string) $item['html'];
+            break;
+          case 'template':
+            $content .= $this->renderTemplate($item['template'], $item['params']);
+            break;
+          case 'zone':
+            $content .= $this->renderZone($item['zone'], $item['params']);
+            break;
+        }
+
+      }
+    }
+    //content from #movetoskin and #skintemplate
+    if( \Skinny::hasContent($zone) ){
+      foreach(\Skinny::getContent($zone) as $item){
+
+        //pre-rendered html from #movetoskin
+        if(isset($item['html'])){
+          if($this->debug===true){
+            $content.='<!--Skinny:MoveToSkin: '.$template.'-->';
+          }
+          $content .= $sep . $item['html'];
+        }
+        else
+        //a template name to render
+        if(isset($item['template'])){
+          if($this->debug===true){
+            $content.='<!--Skinny:Template (via #skintemplate): '.$item['template'].'-->';
+          }
+          $content .= $this->renderTemplate( $item['template'], $item['params'] );
+        }
+      }
+    }
+    return $content;
+  }
+
+
 
 	/**
 	 * Add the result of a function callback to a zone
@@ -65,7 +172,7 @@ abstract class Layout{
 	 * 	eg.	add('before:content', array('methodName', $obj))
 	 *			add('before:content', 'methodOnThisObject')
 	 */
-	public function addHook(String $zone, $hook, Array $args=array()){
+	public function addHookTo($zone, $hook, Array $args=array()){
 		if(!isset($this->content[$zone])){
 			$this->content[$zone] = array();
 		}
@@ -81,9 +188,9 @@ abstract class Layout{
 	/**
 	 * Render the output of a template to a zone
 	 *
-	 * eg.  add('before:content', 'template-name')
+	 * eg.	add('before:content', 'template-name')
 	 */
-	public function addTemplate(String $zone, String $template, Array $params=array()){
+	public function addTemplateTo($zone, $template, Array $params=array()){
 		if(!isset($this->content[$zone]))
 			$this->content[$zone] = array();
 		$this->content[$zone][] = array('type'=>'template', 'template'=>$template, 'params'=>$params);
@@ -92,9 +199,9 @@ abstract class Layout{
 	/**
 	 * Add html content to a zone
 	 *
-	 * eg.  add('before:content', '<h2>Some html content</h2>')
+	 * eg.	add('before:content', '<h2>Some html content</h2>')
 	 */
-	public function addHTML(String $zone, String $content){
+	public function addHTMLTo($zone, $content){
 		if(!isset($this->content[$zone]))
 			$this->content[$zone] = array();
 		$this->content[$zone][] = array('type'=>'html', 'html'=>$content);
@@ -103,9 +210,9 @@ abstract class Layout{
 	/**
 	 * Add a zone to a zone. Allows adding zones without editing template files.
 	 *
-	 * eg.  add('before:content', 'zone name')
+	 * eg.	add('before:content', 'zone name')
 	 */
-	public function addZone(String $zone, String $name, Array $params=array()){
+	public function addZoneTo($zone, $name, Array $params=array()){
 		if(!isset($this->content[$zone]))
 			$this->content[$zone] = array();
 		$this->content[$zone][] = array('type'=>'zone', 'zone'=>$name, 'params'=>$params);
@@ -114,25 +221,48 @@ abstract class Layout{
 	/**
 	 * Convenience template method for <?php echo $this->renderZone() ?>
 	 */
-	public function insert(String $zone, Array $args=array()){
+	public function insert($zone, Array $args=array()){
 		echo $this->renderZone($zone, $args);
 	}
-	public function before(String $zone, Array $args=array()){
+	public function before($zone, Array $args=array()){
 		$this->insert('before:'.$zone, $args);
 	}
-	public function after(String $zone, Array $args=array()){
+	public function after($zone, Array $args=array()){
 		$this->insert('after:'.$zone, $args);
 	}
-	public function prepend(String $zone, Array $args=array()){
+	public function prepend($zone, Array $args=array()){
 		$this->insert('prepend:'.$zone, $args);
 	}
-	public function append(String $zone, Array $args=array()){
+	public function append($zone, Array $args=array()){
 		$this->insert('append:'.$zone, $args);
 	}
-	public function attach(String $zone, Array $args=array()){
+	public function attach($zone, Array $args=array()){
 		$this->prepend($zone, $args);
 		$this->insert($zone, $args);
 		$this->append($zone, $args);
 	}
+
+  public function html ($msg) {
+    return $this->getTemplate()->html($msg);
+  }
+  public function text ($msg) {
+    return $this->getTemplate()->text($msg);
+  }
+  public function url ($name) {
+    return $this->getTemplate()->data['nav_urls'][$name]['href'];
+  }
+  public function makeListItem ($key, $item, $options=array()) {
+    return $this->getTemplate()->makeListItem($key, $item, $options);
+  }
+
+  public function getClassPath ($class) {
+    $c = new \ReflectionClass($class);
+    return dirname($c->getFileName());
+  }
+
+  public function getAncestors ($class) {
+    for ($classes[] = $class; $class = get_parent_class ($class); $classes[] = $class);
+    return $classes;
+  }
 
 }

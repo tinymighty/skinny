@@ -21,7 +21,6 @@ class Skinny{
    * Initialization. Hook for BeforeInitialize
    */
   public static function init(&$title, $unused, &$output, &$user, $request, $mediaWiki){
-    self::setOptions();
     return true;
   }
 
@@ -62,42 +61,42 @@ class Skinny{
   }
 
 
-  public static function setOptions( Array $options=array(), $reset=false ){
-    if( $reset || empty(self::$options) ){
-      //set all options to their defaults
-      self::$options = self::$defaults;
-    }
-    self::$options = self::mergeOptionsArrays(self::$options, $options );
-  }
+  // public static function setOptions( Array $options=array(), $reset=false ){
+  //   if( $reset || empty(self::$options) ){
+  //     //set all options to their defaults
+  //     self::$options = self::$defaults;
+  //   }
+  //   self::$options = self::mergeOptionsArrays(self::$options, $options );
+  // }
 
   //recursively merge arrays, but if there are key conflicts,
   //overwrite from right to left
-  public static function mergeOptionsArrays($left, $right){
-    $new = $left;
-    foreach( $right as $k => $v){
-      if( isset($left[$k]) ){
-        //if there's an existing value, merge it if it's an array
-        if( is_array($left[$k]) ){
-          if( is_array($v) ){
-            $new[$k] = self::mergeOptionsArrays($left[$k], $v);
-          }else{
-            //if the new option isn't an array, we'll interpret it as a boolean
-            //and add this as an 'enabled' property to the left array
-            //eg. this allows passing an option as false as a shortcut for array( enabled => false )
-            $new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
-          }
-        }else{
-          //otherwise just copy it over
-          $new[$k] = $v;
-        }
-
-      }else{
-        //if there's no existing value, just copy it over
-        $new[$k] = $v;
-      }
-    }
-    return $new;
-  }
+  // public static function mergeOptionsArrays($left, $right){
+  //   $new = $left;
+  //   foreach( $right as $k => $v){
+  //     if( isset($left[$k]) ){
+  //       //if there's an existing value, merge it if it's an array
+  //       if( is_array($left[$k]) ){
+  //         if( is_array($v) ){
+  //           $new[$k] = self::mergeOptionsArrays($left[$k], $v);
+  //         }else{
+  //           //if the new option isn't an array, we'll interpret it as a boolean
+  //           //and add this as an 'enabled' property to the left array
+  //           //eg. this allows passing an option as false as a shortcut for array( enabled => false )
+  //           $new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
+  //         }
+  //       }else{
+  //         //otherwise just copy it over
+  //         $new[$k] = $v;
+  //       }
+  //
+  //     }else{
+  //       //if there's no existing value, just copy it over
+  //       $new[$k] = $v;
+  //     }
+  //   }
+  //   return $new;
+  // }
 
 
 
@@ -171,9 +170,9 @@ class Skinny{
     //sometimes OutputPageBeforeHTML is called after skin init,
     //sometimes before, so we allow for both
     self::$skinLayout = $layout;
-    if(self::$skin){
-      self::$skin->setOptions(array('layout'=>$layout[1]));
-    }
+  }
+  public static function getLayout () {
+    return self::$skinLayout;
   }
 
   public static function hasContent($target){
@@ -249,12 +248,10 @@ class Skinny{
       $skinName = $skinNames[$key];
       $className = "\Skin{$skinName}";
 
-      $options = array();
-      if( self::$skinLayout ){
-        $options['layout'] = self::$skinLayout;
-      }
-      //echo self::$skinLayout; print_r($options);// exit;
       $skin = new $className();
+      if (isset(self::$skinLayout)){
+        $skin->setLayout(self::$skinLayout);
+      }
     }
     self::$skin = $skin;
 

@@ -14,24 +14,16 @@ namespace Skinny;
  */
 class Slim {
 
-	protected $settings = array(
-		'debug' => false,
-		'auto_intialize' => true
-	);
+	protected $debug = false;
+	protected $auto_intialize = true;
+	protected $template_paths = array();
 
-	public $options = array();
-
-	protected $_template_paths = array();
-
-	public function __construct( $options ){
-
-		//set options
-		$options = $this->options = array_merge($this->settings, $this->options, $options);
+	public function __construct( $options=array() ){
 
 		if( isset($options['template_path']) ){
 			$this->addTemplatePath( $options['template_path'] );
 		}
-		if( $options['auto_intialize'] === true ){
+		if( $this->auto_intialize === true ){
 			$this->initialize();
 		}
 
@@ -39,7 +31,7 @@ class Slim {
 
 	protected function addTemplatePath($path){
 		if(file_exists($path) && is_dir($path)){
-			array_unshift( $this->_template_paths, $path);
+			array_unshift( $this->template_paths, $path);
 		}
 	}
 
@@ -60,11 +52,11 @@ class Slim {
 		if($this->options['debug']===true){
 			echo '<div class="skinny-debug">Skinny:Template: '.print_r($template, true).'</div>';
 		}
-		if(count($this->_template_paths) < 1){
+		if(count($this->template_paths) < 1){
 			throw Exception('No template paths set.');
 		}
 		//try all defined template paths
-		foreach($this->_template_paths as $path){
+		foreach($this->template_paths as $path){
 			$filepath = $path.'/'.$template.'.tpl.php';
 			if( file_exists($filepath) ){
 				require( $filepath );

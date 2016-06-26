@@ -29,14 +29,7 @@ class Skin extends \SkinTemplate{
 	 */
 	protected static $_modulesRegistered = false;
 
-
-	/**
-	 * Default option values
-	 */
-	public $defaults = array(
-		'layout'=>'default'
-	);
-	public $options = array();
+	protected static $defaultLayout;
 
 
 	/**
@@ -55,16 +48,16 @@ class Skin extends \SkinTemplate{
  * eg. to define resources.
 	 */
 	public static function init(){
-		
+
 	}
 
-	public function setOptions( $options, $reset=false ){
-		if( $reset || empty($this->options) ){
-			//set all options to their defaults
-			$this->options = $this->defaults;
-		}
-		$this->options = \Skinny::mergeOptionsArrays( $this->options, $options );
-	}
+	// public function setOptions( $options, $reset=false ){
+	// 	if( $reset || empty($this->options) ){
+	// 		//set all options to their defaults
+	// 		$this->options = $this->defaults;
+	// 	}
+	// 	$this->options = \Skinny::mergeOptionsArrays( $this->options, $options );
+	// }
 
 	/**
 	  * Load required modules with ResourceLoader
@@ -98,7 +91,6 @@ class Skin extends \SkinTemplate{
 	 * and ensure it's initialized with the options it needs.
 	 */
 	public function setupTemplate( $templateClass, $repository = false, $cache_dir = false ) {
-		$this->layout = self::$layouts[ $this->options['layout'] ];
 		//allow current layout to specify a different template class
 		// $templateClass = isset($this->layout['templateClass']) ? $this->layout['templateClass'] : $templateClass;
 		// $options = array();
@@ -113,9 +105,6 @@ class Skin extends \SkinTemplate{
 		// foreach(self::$template_paths as $path){
 		// 	$tpl->addTemplatePath($path);
 		// }
-		if( $this->layout ){
-			$tpl->setLayout($this->layout, self::$layouts[$this->layout]);
-		}
 		return $tpl;
 	}
 
@@ -124,7 +113,7 @@ class Skin extends \SkinTemplate{
 	 */
 	public function addToBodyAttributes( $out, &$attrs){
 		$classes = array();
-		$layout = $this->layout;
+		$layout = $this->getLayout();
 		//print_r($layout); exit;
 		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$GLOBALS['wgSitename']));
 		// while( isset($layout['extends']) ){
@@ -132,7 +121,7 @@ class Skin extends \SkinTemplate{
 		// 	$classes[] = 'layout-'.$layout['name'];
 		// }
 
-		$classes[] = 'layout-'.$this->layout;
+		$classes[] = 'layout-'.$layout;
 
 		if( $GLOBALS['wgUser']->isLoggedIn() ){
 			$classes[] = 'user-loggedin';
@@ -147,12 +136,27 @@ class Skin extends \SkinTemplate{
 	/**
 	 * Add a new skin layout for this skin
 	 */
-	public static function addLayout($name, $className){
+	public static function addLayout ($name, $className){
 		if (!class_exists($className)) {
 			throw new \Exception('Invalid Layout class: '.$className);
 		}
-		self::$layouts[$name] = $className;
+		static::$layouts[$name] = $className;
 		self::addModules($className::getResourceModules());
+	}
+
+	public static function setLayout($name) {
+		if (isset(static::$layouts[$name])) {
+			throw new \Exception("Layout $name does not exist");
+		}
+		\Skinny::setLayout($name);
+	}
+
+	public function getLayout () {
+		return \Skinny::getLayout();
+	}
+
+	public function getLayoutClass () {
+		return static::$layouts[\Skinny::getLayout()];
 	}
 
 	/**
@@ -192,7 +196,7 @@ class Skin extends \SkinTemplate{
 
 
 	public static function addTemplatePath (\String $path){
-		self::$template_paths[] = $path;
+		static::$template_paths[] = $path;
 	}
 
 
@@ -200,15 +204,15 @@ class Skin extends \SkinTemplate{
 	 * Build a list of modules to be registered to the ResourceLoader when it initializes.
 	 */
 	public static function addModules ($modules=array(), $load=false){
-		if( self::$_modulesRegistered ){
+		if( static::$_modulesRegistered ){
 			throw new Exception('Skin is attempting to add modules after modules have already been registered.');
 		}
 		if(empty($modules)){
 			return;
 		}
-		self::$modules += (array) $modules;
+		static::$modules += (array) $modules;
 		if($load){
-			self::$autoloadModules += array_keys($modules);
+			static::$autoloadModules += array_keys($modules);
 		}
 	}
 
@@ -222,6 +226,6 @@ class Skin extends \SkinTemplate{
 	}
 
 	public static function loadModules( $module_names ){
-		self::$autoloadModules += $module_names;
+		static::$autoloadModules += $module_names;
 	}
 }
