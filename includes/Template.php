@@ -14,50 +14,27 @@ namespace Skinny;
  */
 abstract class Template extends \BaseTemplate {
 
-	//core settings
-	protected $defaults = array(
-		'debug' => 'false',
-		'main template' => 'main',
-		'template paths' => array(),
+	protected $debug = false;
 
-		'show title'=> true,
-		'show tagline' => true,
+	protected $showTitle = true;
+	protected $showTagline = true;
 
-		'breadcrumbs'=>array(
-			'enabled'=>true,
-			'zone' => 'prepend:title'
-		)
-	);
-
-	//a stack of new defaults, added to by child objects
-	//this ensures child defaults overwrite their parents
-	protected $_defaults = array();
+	protected $showBreadcrumbs = true;
+	protected $breadcrumbsZone = 'prepend:title';
 
 	protected $options = array();
 
-	protected $_template_paths = array();
+	protected $template_paths = array();
 
-	public function __construct( $options=array() ){
-		parent::__construct();
-		$this->mergeDefaults();
-		$this->setOptions( $options );
-		//adding path manually ensures that there's an entry for every class in the heirarchy
-		//allowing for template fallback to every skin all the way down
-		$this->addTemplatePath( dirname(__FILE__).'/templates' );
+	protected $layout;
 
-		foreach($this->options['template paths'] as $path){
-			$this->addTemplatePath($path);
-		}
+	public function setLayout ($name, $class) {
+		$this->layoutName = $name;
+		$this->layoutClass = $class;
 	}
 
-	public function mergeDefaults(){
-		if(!empty($this->_defaults)){
-			//merge all defaults in, starting from the most recently added
-			//this means children's defaults override their parents
-			while($defaults = array_pop($this->_defaults) ){
-				$this->defaults = $this->mergeOptionsArrays( $this->defaults, $defaults );
-			}
-		}
+	public function getLayout () {
+		return $this->layoutName;
 	}
 
 	//recursively merge arrays, but if there are key conflicts,
@@ -68,20 +45,14 @@ abstract class Template extends \BaseTemplate {
 
 	public function setOptions($options, $reset=false){
 		if( $reset || empty($this->options) ){
-			//set all options to their defaults
-			$this->options = $this->defaults;
+			$this->options = $options;
 		}
 		$this->options = $this->mergeOptionsArrays($this->options, $options);
 	}
 
-	public function setDefaults( $defaults ){
-		$this->_defaults[] = $defaults;
-	}
-
-
 	public function addTemplatePath($path){
 		if(file_exists($path) && is_dir($path)){
-			array_unshift( $this->_template_paths, $path);
+			array_unshift( $this->template_paths, $path);
 		}
 	}
 
@@ -96,51 +67,57 @@ abstract class Template extends \BaseTemplate {
 	final function execute() {
 		//parse content first, to allow for any ADDTEMPLATE items
 		$content = $this->parseContent($this->data['bodytext']);
+
+		if( !isset($this->layoutClass)	){
+			throw new \Exception('No layout class defined.');
+		}
+
+		$layout = new ${$this->layoutClass}($this->getSkin(), $this);
 		//set up standard content zones
 		//head element (including opening body tag)
-		$this->addHTML('head', $this->data[ 'headelement' ]);
+		$layout->addHTML('head', $this->data[ 'headelement' ]);
 		//the logo image defined in LocalSettings
-		$this->addHTML('logo', $this->data['logopath']);
+		$layout->addHTML('logo', $this->data['logopath']);
 		//the article title
 		if($this->options['show title']){
-			$this->addHTML('content-container.class', 'has-title');
-			$this->addTemplate('title', 'title', array(
+			$layout->addHTML('content-container.class', 'has-title');
+			$layout->addTemplate('title', 'title', array(
 				'title'=>$this->data['title']
 			));
 		}
 		//article content
-		$this->addHTML('content', $content);
+		$layout->addHTML('content', $content);
 		//the site notice
 		if( !empty($this->data['sitenotice'])){
-			$this->addTemplate('notice', 'site-notice', array(
+			$layout->addTemplate('notice', 'site-notice', array(
 				'notice'=>$this->data['sitenotice']
 			));
 		}
 		//the site tagline, if there is one
 		if($this->options['show tagline']){
-			$this->addHTML('content-container.class', 'has-tagline');
-			$this->addTemplate('tagline', 'tagline', array(
+			$layout->addHTML('content-container.class', 'has-tagline');
+			$layout->addTemplate('tagline', 'tagline', array(
 				'tagline'=>wfMsg('tagline')
 			));
 		}
-		$this->addHook('breadcrumbs', 'breadcrumbs');
+		$layout->addHook('breadcrumbs', 'breadcrumbs');
 
 		//the contents of Mediawiki:Sidebar
-		$this->addTemplate('classic-sidebar', 'classic-sidebar', array(
+		$layout->addTemplate('classic-sidebar', 'classic-sidebar', array(
 			'sections'=>$this->data['sidebar']
 		));
 		//list of language variants
-		$this->addTemplate('language variants', 'language-variants', array(
+		$layout->addTemplate('language variants', 'language-variants', array(
 			'variants'=>$this->data['language_urls']
 		));
 
 		//page footer
-		$this->addTemplate('footer', 'footer', array(
+		$layout->addTemplate('footer', 'footer', array(
 			'icons'=>$this->getFooterIcons( "icononly" ),
 			'links'=>$this->getFooterLinks( "flat" )
 		));
 		//mediawiki needs this to inject script tags after the footer
-		$this->addHook('after:footer', 'afterFooter');
+		$layout->addHook('after:footer', 'afterFooter');
 
 
 		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
@@ -148,112 +125,35 @@ abstract class Template extends \BaseTemplate {
 		//allow skins to set up before render
 		$this->initialize();
 
+		echo $this->render();
+	}
 
-		echo $this->renderTemplate($this->options['main template']);
-
+	protected function render () {
+		return $this->renderTemplate($this->getLayout()->getMainTemplateFile());
 	}
 
 
-
-	public function renderTemplate($template, $args=array()){
-		ob_start();
-		extract($args);
+	public function renderTemplate(String $template, Array $args=array()){
 		if($this->options['debug']===true){
 			echo '<div class="skinny-debug">\Skinny\Template: '.$template.'</div>';
 		}
 		//try all defined template paths
-		$exists = false;
-		foreach($this->_template_paths as $path){
+		$path = false;
+		foreach($this->template_paths as $path){
 			$filepath = $path.'/'.$template.'.tpl.php';
 			if( file_exists($filepath) ){
-				$exists = true;
-				require( $filepath );
-				break; //once we've rendered a template, stop traversing template_paths
+				$path = $filepath;
+				break; //once we've got a template, stop traversing template_paths
 			}
 		}
-		if($exists){
-			$html = ob_get_clean();
+		if($path !== false){
+			$html = $this->getLayout()->renderTemplateFile($path, $args);
 		}else{
 			$html = 'Template file `'.$template.'.tpl.php` not found!';
 		}
 		return $html;
 	}
 
-	/**
-	 * Add the result of a function callback to a zone
-	 *
-	 * 	eg.	add('before:content', array('methodName', $obj))
-	 *			add('before:content', 'methodOnThisObject')
-	 */
-	public function addHook($zone, $hook, $args=array()){
-		if(!isset($this->content[$zone])){
-			$this->content[$zone] = array();
-		}
-		//allow just a string reference to a method on this skin object
-		if(!is_array($hook) && method_exists($this, $hook)){
-			$hook = array($hook, $this);
-		}else{
-			return false;
-		}
-		$this->content[$zone][] = array('type'=>'hook', 'hook'=>$hook, 'arguments'=>$args);
-	}
-
-	/**
-	 * Render the output of a template to a zone
-	 *
-	 * eg.  add('before:content', 'template-name')
-	 */
-	public function addTemplate($zone, $template, $params=array()){
-		if(!isset($this->content[$zone]))
-			$this->content[$zone] = array();
-		$this->content[$zone][] = array('type'=>'template', 'template'=>$template, 'params'=>$params);
-	}
-
-	/**
-	 * Add html content to a zone
-	 *
-	 * eg.  add('before:content', '<h2>Some html content</h2>')
-	 */
-	public function addHTML($zone, $content){
-		if(!isset($this->content[$zone]))
-			$this->content[$zone] = array();
-		$this->content[$zone][] = array('type'=>'html', 'html'=>$content);
-	}
-
-	/**
-	 * Add a zone to a zone. Allows adding zones without editing template files.
-	 *
-	 * eg.  add('before:content', 'zone name')
-	 */
-	public function addZone($zone, $name, $params=array()){
-		if(!isset($this->content[$zone]))
-			$this->content[$zone] = array();
-		$this->content[$zone][] = array('type'=>'zone', 'zone'=>$name, 'params'=>$params);
-	}
-
-	/**
-	 * Convenience template method for <?php echo $this->render() ?>
-	 */
-	function insert($zone, $args=array()){
-		echo $this->render($zone, $args);
-	}
-	function before($zone, $args=array()){
-		$this->insert('before:'.$zone, $args);
-	}
-	function after($zone, $args=array()){
-		$this->insert('after:'.$zone, $args);
-	}
-	function prepend($zone, $args=array()){
-		$this->insert('prepend:'.$zone, $args);
-	}
-	function append($zone, $args=array()){
-		$this->insert('append:'.$zone, $args);
-	}
-	function attach($zone, $args=array()){
-		$this->prepend($zone, $args);
-		$this->insert($zone, $args);
-		$this->append($zone, $args);
-	}
 	/**
 	 * Transclude a MediaWiki page
 	 */
@@ -262,10 +162,10 @@ abstract class Template extends \BaseTemplate {
 	}
 
 	/**
-	 * Run content content, optionally passing arguments to provide to
+	 * Render zone content, optionally passing arguments to provide to
 	 * object methods
 	 */
-	protected function render($zone, $args=array()){
+	protected function renderZone(String $zone, $args=array()){
 		$sep = isset($args['seperator']) ? $args['seperator'] : ' ';
 
 		$content = '';
@@ -288,7 +188,7 @@ abstract class Template extends \BaseTemplate {
 						$content .= $this->renderTemplate($item['template'], $item['params']);
 						break;
 					case 'zone':
-						$content .= $this->render($item['zone'], $item['params']);
+						$content .= $this->renderZone($item['zone'], $item['params']);
 						break;
 				}
 

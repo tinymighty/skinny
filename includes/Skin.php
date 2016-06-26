@@ -55,23 +55,7 @@ class Skin extends \SkinTemplate{
  * eg. to define resources.
 	 */
 	public static function init(){
-
-	}
-
-
-	function __construct( $options=array() ){
-		$this->setOptions( $options );
-
-		/*if(isset(Skinny::$skinLayout)){
-			$this->options['layout'] = Skinny::$skinLayout;
-		}*/
-
-		$layout = $this->layout = self::$layouts[ $this->options['layout'] ];
-		//allow a layout to provide a custom template class
-		if( isset($layout['templateClass']) ){
-			$this->template = $layout['templateClass'];
-		}
-
+		
 	}
 
 	public function setOptions( $options, $reset=false ){
@@ -88,17 +72,17 @@ class Skin extends \SkinTemplate{
 	public function initPage( \OutputPage $out ){
 
 		$loadModules = array();
-		if( isset( $this->layout['modules'] ) ){
-			$loadModules += array_keys( $this->layout['modules'] );
-		}
+		// if( isset( $this->layout['modules'] ) ){
+		// 	$loadModules += array_keys( $this->layout['modules'] );
+		// }
 
-		$layout = $this->layout;
-		while( isset($layout['extends']) ){
-			$layout = self::$layouts[ $layout['extends'] ];
-			if(!empty($layout['modules'])){
-				$loadModules += array_keys($layout['modules']);
-			}
-		}
+		// $layout = $this->layout;
+		// while( isset($layout['extends']) ){
+		// 	$layout = self::$layouts[ $layout['extends'] ];
+		// 	if(!empty($layout['modules'])){
+		// 		$loadModules += array_keys($layout['modules']);
+		// 	}
+		// }
 
 		$loadModules += self::$autoloadModules;
 
@@ -113,20 +97,24 @@ class Skin extends \SkinTemplate{
 	 * Hooking into the template setup process to provide a custom template
 	 * and ensure it's initialized with the options it needs.
 	 */
-	public function setupTemplate( $classname, $repository = false, $cache_dir = false ) {
+	public function setupTemplate( $templateClass, $repository = false, $cache_dir = false ) {
 		$this->layout = self::$layouts[ $this->options['layout'] ];
 		//allow current layout to specify a different template class
-		$classname = isset($this->layout['templateClass']) ? $this->layout['templateClass'] : $classname;
-		$options = array();
-		if( isset($this->layout['templateOptions']) ){
-			$options += $this->layout['templateOptions'];
-		}
+		// $templateClass = isset($this->layout['templateClass']) ? $this->layout['templateClass'] : $templateClass;
+		// $options = array();
+		// if( isset($this->layout['templateOptions']) ){
+		// 	$options += $this->layout['templateOptions'];
+		// }
 		//instantiate template with the skin options
-		$tpl = new $classname( $options );
+		$tpl = new $templateClass();
+
 		//ensure that all template paths registered to this skin are added to the template
 		//this allows overriding templates without having to create a new template class
-		foreach(self::$template_paths as $path){
-			$tpl->addTemplatePath($path);
+		// foreach(self::$template_paths as $path){
+		// 	$tpl->addTemplatePath($path);
+		// }
+		if( $this->layout ){
+			$tpl->setLayout($this->layout, self::$layouts[$this->layout]);
 		}
 		return $tpl;
 	}
@@ -139,12 +127,12 @@ class Skin extends \SkinTemplate{
 		$layout = $this->layout;
 		//print_r($layout); exit;
 		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$GLOBALS['wgSitename']));
-		while( isset($layout['extends']) ){
-			$layout = self::$layouts[ $layout['extends'] ];
-			$classes[] = 'layout-'.$layout['name'];
-		}
+		// while( isset($layout['extends']) ){
+		// 	$layout = self::$layouts[ $layout['extends'] ];
+		// 	$classes[] = 'layout-'.$layout['name'];
+		// }
 
-		$classes[] = 'layout-'.$this->layout['name'];
+		$classes[] = 'layout-'.$this->layout;
 
 		if( $GLOBALS['wgUser']->isLoggedIn() ){
 			$classes[] = 'user-loggedin';
@@ -159,54 +147,51 @@ class Skin extends \SkinTemplate{
 	/**
 	 * Add a new skin layout for this skin
 	 */
-	public static function addLayout($name, $config=array()){
-		if( isset($config['modules']) && !empty($config['modules']) ){
-			self::addModules($config['modules']);
-		}else{
-			$config['modules'] = array();
+	public static function addLayout($name, $className){
+		if (!class_exists($className)) {
+			throw new \Exception('Invalid Layout class: '.$className);
 		}
-		$config['name'] = $name;
-
-		self::$layouts[$name] = $config;
+		self::$layouts[$name] = $className;
+		self::addModules($className::getResourceModules());
 	}
 
 	/**
 	 * Set the layout config
 	 */
-	public static function setLayoutOptions( $name, $options ){
-		if( !isset(self::$layouts[$name]) ){
-			return;
-		}
-		if( isset($options['modules']) ){
-			self::addModules( $options['modules'] );
-		}
-		self::$layouts[$name] = \Skinny::mergeOptionsArrays( self::$layouts[$name], $options );
-	}
+	// public static function setLayoutOptions( $name, $options ){
+	// 	if( !isset(self::$layouts[$name]) ){
+	// 		return;
+	// 	}
+	// 	if( isset($options['modules']) ){
+	// 		self::addModules( $options['modules'] );
+	// 	}
+	// 	self::$layouts[$name] = \Skinny::mergeOptionsArrays( self::$layouts[$name], $options );
+	// }
 
 	/**
 	 * Set the options which will be passed to the layout's TemplateClass
 	 */
-	public static function setLayoutTemplateOptions( $name, $options ){
-		if(!isset(self::$layouts[$name])){
-			return;
-		}
-		if(!isset(self::$layouts[$name]['templateOptions'])){
-			self::$layouts[$name]['templateOptions'] = array();
-		}
-		self::$layouts[$name]['templateOptions'] = \Skinny::mergeOptionsArrays( self::$layouts[$name]['templateOptions'], $options );
-	}
+	// public static function setLayoutTemplateOptions( $name, $options ){
+	// 	if(!isset(self::$layouts[$name])){
+	// 		return;
+	// 	}
+	// 	if(!isset(self::$layouts[$name]['templateOptions'])){
+	// 		self::$layouts[$name]['templateOptions'] = array();
+	// 	}
+	// 	self::$layouts[$name]['templateOptions'] = \Skinny::mergeOptionsArrays( self::$layouts[$name]['templateOptions'], $options );
+	// }
 
 
 	/**
 	 * Create a new layout which inherits from an existing layout
 	 */
-	public static function extendLayout($extend, $name, $config=array()){
-		$config['extends'] = $extend;
-		self::addLayout($name, $config);
-	}
+	// public static function extendLayout($extend, $name, $config=array()){
+	// 	$config['extends'] = $extend;
+	// 	self::addLayout($name, $config);
+	// }
 
 
-	public static function addTemplatePath( $path ){
+	public static function addTemplatePath (\String $path){
 		self::$template_paths[] = $path;
 	}
 
@@ -214,7 +199,7 @@ class Skin extends \SkinTemplate{
 	/**
 	 * Build a list of modules to be registered to the ResourceLoader when it initializes.
 	 */
-	public static function addModules($modules=array(), $load=false){
+	public static function addModules ($modules=array(), $load=false){
 		if( self::$_modulesRegistered ){
 			throw new Exception('Skin is attempting to add modules after modules have already been registered.');
 		}
@@ -234,7 +219,6 @@ class Skin extends \SkinTemplate{
 	 */
 	public static function addModulesToLayout( $layout, $modules ){
 		self::addModules($modules);
-		self::$layouts[$layout]['modules'] += $modules;
 	}
 
 	public static function loadModules( $module_names ){

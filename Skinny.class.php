@@ -31,11 +31,11 @@ class Skinny{
    * Register the Skinny parser functions
    */
   public static function ParserFirstCallInit(&$parser){
-    $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkin');
-    $parser->setFunctionHook('setskin', 'Skinny::setSkin');
-    $parser->setFunctionHook('layout', 'Skinny::setLayout');
-    $parser->setFunctionHook('skinsert', 'Skinny::insertTemplate');
-    $parser->setFunctionHook('imageurl', 'Skinny::getImageURL');
+    $parser->setFunctionHook('movetoskin', 'Skinny::moveToSkinPF');
+    $parser->setFunctionHook('setskin', 'Skinny::setSkinPF');
+    $parser->setFunctionHook('layout', 'Skinny::setLayoutPF');
+    $parser->setFunctionHook('skinsert', 'Skinny::insertTemplatePF');
+    $parser->setFunctionHook('imageurl', 'Skinny::getImageURLPF');
 
     return true;
   }
@@ -107,7 +107,7 @@ class Skinny{
   }
 
   //Parser function: {{#movetoskin: target | content}}
-  public static function moveToSkin($parser, $name='', $content=''){
+  public static function moveToSkinPF ($parser, $name='', $content=''){
     //we have to wrap the inner content within <p> tags, because MW screws up otherwise by placing a <p> tag before and after with related closing and opening tags within
     //php's DOM library doesn't like that and will swap the order of the first closing </p> and the closing </movetoskin> - stranding everything after that outside the <movetoskin> block. Lame.
     //$content = $parser->recursiveTagParse($content);
@@ -116,20 +116,20 @@ class Skinny{
   }
 
   //Parser function: {{#setskin: skin-name}}
-  public static function setSkin($parser, $skin){
+  public static function setSkinPF($parser, $skin){
     $content = '<p>SETSKIN:'.$skin.':NIKSTES</p>';
     return array( $content, 'noparse' => true, 'isHTML' => true );
   }
 
   //Parser function: {{#skin variant: skin-name}}
-  public static function setLayout($parser, $variant){
+  public static function setLayoutPF ($parser, $variant){
     $content = '<p>LAYOUT:'.$variant.':TUOYAL</p>';
     return array( $content, 'noparse' => true, 'isHTML' => true );
   }
 
   //Parser function: {{#skintemplate:template-name|argument=value|argument=value}}
   //render a template from a skin template file...
-  public static function insertTemplate($parser, $template, $spot=''){
+  public static function insertTemplatePF ($parser, $template, $spot=''){
     //process additional arguments into a usable array
     $params = array();
     //sanitize the template name
@@ -138,7 +138,7 @@ class Skinny{
     return '<p>ADDTEMPLATE('.$spot.'):'.$template.':ETALPMETDDA</p>';
   }
 
-  function getImageURL ( &$parser, $name = '', $arg = 'abs' ) {
+  function getImageURLPF ( &$parser, $name = '', $arg = 'abs' ) {
     $img = Image::newFromName( $name );
     if($img!==NULL){
       return (  trim($arg==='abs') ? $GLOBALS['wgServer'] : '') . $img->getURL();
@@ -165,6 +165,15 @@ class Skinny{
     }
 
     return $html;
+  }
+
+  public static function setLayout ($layout) {
+    //sometimes OutputPageBeforeHTML is called after skin init,
+    //sometimes before, so we allow for both
+    self::$skinLayout = $layout;
+    if(self::$skin){
+      self::$skin->setOptions(array('layout'=>$layout[1]));
+    }
   }
 
   public static function hasContent($target){
@@ -217,12 +226,7 @@ class Skinny{
     if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
       $layout = array_pop($matches);
 
-      //sometimes OutputPageBeforeHTML is called after skin init,
-      //sometimes before, so we allow for both
-      self::$skinLayout = $layout[1];
-      if(self::$skin){
-        self::$skin->setOptions(array('layout'=>$layout[1]));
-      }
+      self::setLayout($layout[1]);
 
       $html = preg_replace($pattern, '', $html);
     }
@@ -250,7 +254,7 @@ class Skinny{
         $options['layout'] = self::$skinLayout;
       }
       //echo self::$skinLayout; print_r($options);// exit;
-      $skin = new $className( $options );
+      $skin = new $className();
     }
     self::$skin = $skin;
 
