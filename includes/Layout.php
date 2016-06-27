@@ -7,8 +7,6 @@ define additional zones, etc...
 */
 abstract class Layout{
 
-	protected static $resourceModules = array();
-
 	protected static $templateDir = '/templates';
 
 	protected $mainTemplateFile = 'main';
@@ -22,8 +20,12 @@ abstract class Layout{
 	protected $content = array();
 
 	public static function getResourceModules () {
-		return static::$resourceModules;
+		return array();
 	}
+
+  public static function getHeadModules () {
+    return array();
+  }
 
   public static function getTemplateDir () {
     return static::$templateDir;
@@ -260,9 +262,11 @@ abstract class Layout{
     return dirname($c->getFileName());
   }
 
-  public function getAncestors ($class) {
-    for ($classes[] = $class; $class = get_parent_class ($class); $classes[] = $class);
-    return $classes;
+  public function getAncestors ($class=null) {
+    if (!$class) {
+      $class = get_class($this);
+    }
+    return \Skinny::getClassAncestors($class);
   }
 
 }

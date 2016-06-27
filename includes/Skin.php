@@ -64,6 +64,14 @@ class Skin extends \SkinTemplate{
 	  */
 	public function initPage( \OutputPage $out ){
 
+		//TODO: load modules from parent of layout, too...
+		$layoutClass = self::getLayoutClass();
+		$layoutTree = \Skinny::getClassAncestors($layoutClass);
+		foreach ($layoutTree as $lc) {
+			$out->addModuleStyles($lc::getHeadModules());
+		}
+
+
 		$loadModules = array();
 		// if( isset( $this->layout['modules'] ) ){
 		// 	$loadModules += array_keys( $this->layout['modules'] );
@@ -141,6 +149,7 @@ class Skin extends \SkinTemplate{
 			throw new \Exception('Invalid Layout class: '.$className);
 		}
 		static::$layouts[$name] = $className;
+
 		self::addModules($className::getResourceModules());
 	}
 

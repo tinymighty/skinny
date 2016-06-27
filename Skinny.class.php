@@ -258,5 +258,10 @@ class Skinny{
     return true;
   }
 
+  public static function getClassAncestors ($class) {
+    for ($classes[] = $class; $class = get_parent_class ($class); $classes[] = $class);
+    return $classes;
+  }
+
 
 }
