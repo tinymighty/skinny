@@ -65,7 +65,7 @@ abstract class Template extends \BaseTemplate {
 		//the article title
 		if($this->showTitle){
 			$layout->addHTMLTo('content-container.class', 'has-title');
-			$layout->addHTMLTo('title', $this->data['title']);
+			$layout->addHTMLTo('title-html', $this->data['title']);
 		}
 		//article content
 		$layout->addHTMLTo('content', $content);
@@ -79,6 +79,9 @@ abstract class Template extends \BaseTemplate {
 			$layout->addHTMLTo('tagline', $this->getMsg('tagline') );
 		}
 		$layout->addHookTo('breadcrumbs', 'breadcrumbs');
+		if(\Skinny::hasContent('toc')){
+			$layout->addHTMLTo('toc', \Skinny::getContent('toc'));
+		}
 
 		//the contents of Mediawiki:Sidebar
 		// $layout->addTemplate('classic-sidebar', 'classic-sidebar', array(
@@ -90,10 +93,6 @@ abstract class Template extends \BaseTemplate {
 		// ));
 
 		//page footer
-		// $layout->addTemplate('footer', 'footer', array(
-		// 	'icons'=>$this->getFooterIcons( "icononly" ),
-		// 	'links'=>$this->getFooterLinks( "flat" )
-		// ));
 		$layout->addHookTo('footer-links', 'getFooterLinks');
 		$layout->addHookTo('footer-icons', 'getFooterIcons');
 		//mediawiki needs this to inject script tags after the footer

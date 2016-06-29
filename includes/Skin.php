@@ -91,7 +91,7 @@ class Skin extends \SkinTemplate{
 			$out->addModules($name);
 		}
 
-		//echo '<pre>'; print_r($out->getModules(true));
+		// echo '<pre>'; print_r($out->getModules(true)); exit;
 	}
 
 	/**
@@ -154,7 +154,7 @@ class Skin extends \SkinTemplate{
 	}
 
 	public static function setLayout($name) {
-		if (isset(static::$layouts[$name])) {
+		if (!isset(static::$layouts[$name])) {
 			throw new \Exception("Layout $name does not exist");
 		}
 		\Skinny::setLayout($name);
@@ -165,6 +165,9 @@ class Skin extends \SkinTemplate{
 	}
 
 	public function getLayoutClass () {
+		if (!isset(static::$layouts[\Skinny::getLayout()])) {
+			throw new \Exception("Layout $name does not exist");
+		}
 		return static::$layouts[\Skinny::getLayout()];
 	}
 
@@ -235,6 +238,9 @@ class Skin extends \SkinTemplate{
 	}
 
 	public static function loadModules( $module_names ){
-		static::$autoloadModules += $module_names;
+		if (is_string($module_names)) {
+			$module_names = array($module_names);
+		}
+		self::$autoloadModules = array_merge(self::$autoloadModules, $module_names);
 	}
 }

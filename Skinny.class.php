@@ -7,12 +7,11 @@ class Skinny{
   //static class
   private function __construct(){}
 
-  protected static $defaults=array(
-    'extract toc' => false,
-    'remove toc' => false
-  );
-  public static $options=array();
+  protected static $extractTOC = true;
+  protected static $removeTOC = false;
+
   public static $content = array();
+
   protected static $pageSkin = null;
   protected static $skin;
   protected static $skinLayout = null;
@@ -52,7 +51,7 @@ class Skinny{
   public static function OutputPageBeforeHTML($out, &$html){
     //echo $html; exit;
     $html = self::processMoveContent($html);
-    if(self::$options['extract toc']){
+    if(self::$extractTOC){
       $html = self::extractTOC($html);
     }
     $html = self::processSetSkin($html);
@@ -167,8 +166,6 @@ class Skinny{
   }
 
   public static function setLayout ($layout) {
-    //sometimes OutputPageBeforeHTML is called after skin init,
-    //sometimes before, so we allow for both
     self::$skinLayout = $layout;
   }
   public static function getLayout () {
@@ -195,7 +192,7 @@ class Skinny{
     //just grabs everything from <div id="toc" to </li></ul></div>
     if( preg_match('~<div id="toc"([\S\s]*?)</li>\n\s*</ul>\n\s*</div>~mi', $html, $match)){
 
-      if(self::$options['remove toc']){
+      if(self::$removeTOC){
         $html = str_replace($match[0], '', $html);
       }
       $toc = str_replace('id="toc"', '', $match[0]);

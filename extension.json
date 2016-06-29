@@ -18,8 +18,7 @@
     "config": {
     },
     "ExtensionMessagesFiles": {
-      "SkinnyMagic": "Skinny.i18n.magic.php",
-      "Skinny": "Skinny.i18n.php"
+      "SkinnyMagic": "Skinny.i18n.magic.php"
     },
     "Hooks": {
       "BeforeInitialize": ["Skinny::init"],
@@ -29,7 +28,7 @@
       "ResourceLoaderRegisterModules": ["Skinny\\Skin::ResourceLoaderRegisterModules"]
     },
     "MessagesDirs": {
-      "BoilerPlate": [
+      "Skinny": [
         "i18n"
       ]
     },
