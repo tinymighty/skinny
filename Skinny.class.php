@@ -60,45 +60,6 @@ class Skinny{
   }
 
 
-  // public static function setOptions( Array $options=array(), $reset=false ){
-  //   if( $reset || empty(self::$options) ){
-  //     //set all options to their defaults
-  //     self::$options = self::$defaults;
-  //   }
-  //   self::$options = self::mergeOptionsArrays(self::$options, $options );
-  // }
-
-  //recursively merge arrays, but if there are key conflicts,
-  //overwrite from right to left
-  // public static function mergeOptionsArrays($left, $right){
-  //   $new = $left;
-  //   foreach( $right as $k => $v){
-  //     if( isset($left[$k]) ){
-  //       //if there's an existing value, merge it if it's an array
-  //       if( is_array($left[$k]) ){
-  //         if( is_array($v) ){
-  //           $new[$k] = self::mergeOptionsArrays($left[$k], $v);
-  //         }else{
-  //           //if the new option isn't an array, we'll interpret it as a boolean
-  //           //and add this as an 'enabled' property to the left array
-  //           //eg. this allows passing an option as false as a shortcut for array( enabled => false )
-  //           $new[$k] = array_merge( $left[$k], array('enabled' => (bool) $v) );
-  //         }
-  //       }else{
-  //         //otherwise just copy it over
-  //         $new[$k] = $v;
-  //       }
-  //
-  //     }else{
-  //       //if there's no existing value, just copy it over
-  //       $new[$k] = $v;
-  //     }
-  //   }
-  //   return $new;
-  // }
-
-
-
   public static function build( $path, $options=array() ){
     $options['template_path'] = $path;
     return new Slim( $options );
@@ -150,7 +111,7 @@ class Skinny{
    if(empty($html))
      return $html;
 
-    if( preg_match_all('~<ins data-type="movetoskin" data-name="(\w+)">([\S\s]*?)<\/ins>~m', $html, $matches, PREG_SET_ORDER) ){
+    if( preg_match_all('~<ins data-type="movetoskin" data-name="([\w:]+)">([\S\s]*?)<\/ins>~m', $html, $matches, PREG_SET_ORDER) ){
       foreach($matches as $match){
         if( !isset( self::$content[ $match[1] ] )){
           self::$content[ $match[1] ] = array();
@@ -180,8 +141,9 @@ class Skinny{
 
   public static function getContent($target=null){
     if($target!==null){
-      if( self::hasContent($target) )
+      if( self::hasContent($target) ){
         return self::$content[$target];
+      }
     }else{
       return array();
     }

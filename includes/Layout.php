@@ -75,7 +75,7 @@ abstract class Layout{
 
   public function renderTemplate($templateFile, Array $args=array()){
     if($this->debug===true){
-      echo '<div class="skinny-debug">\Skinny\Template: '.$templateFile.'</div>';
+      echo "\n\n".'<!-- Template File: '.$templateFile.' -->';
     }
 
     // follow class hierarchy of layouts to build a list of template paths
@@ -116,18 +116,19 @@ abstract class Layout{
   protected function renderZone($zone, $args=array()){
     $sep = isset($args['seperator']) ? $args['seperator'] : ' ';
 
+		if($this->debug===true){
+      echo "\n\n".'<!-- Template Zone: '.$zone.' -->';
+    }
+
     $content = '';
     if(isset($this->content[$zone])){
       foreach($this->content[$zone] as $item){
-        if($this->debug===true){
-          $content.='<!--Skinny:Template: '.$template.'-->';
-        }
         switch($item['type']){
           case 'hook':
             //method will be called with two arrays as arguments
             //the first is the args passed to this method (ie. in a template call to $this->insert() )
             //the second are the args passed when the hook was bound
-            $content .= call_user_func_array(array($item['hook'][1], $item['hook'][0]), array($args, $item['arguments']));
+            $content .= call_user_func_array($item['hook'], array($args, $item['arguments']));
             break;
           case 'html':
             $content .= $sep . (string) $item['html'];
@@ -179,10 +180,11 @@ abstract class Layout{
 			$this->content[$zone] = array();
 		}
 		//allow just a string reference to a method on this skin object
-		if(!is_array($hook) && method_exists($this, $hook)){
-			$hook = array($hook, $this);
-		}else{
-			return false;
+		if (!is_array($hook) && method_exists($this, $hook)) {
+			$hook = array($this, $hook);
+		}
+		if (!is_callable($hook, false, $callbable_name)) {
+			throw new \Exception('Invalid skin content hook for zone:'.$zone.' (Hook callback was: '.$callbable_name.')');
 		}
 		$this->content[$zone][] = array('type'=>'hook', 'hook'=>$hook, 'arguments'=>$args);
 	}

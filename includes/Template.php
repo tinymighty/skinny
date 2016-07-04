@@ -50,7 +50,7 @@ abstract class Template extends \BaseTemplate {
 	 */
 	final function execute() {
 		//parse content first, to allow for any ADDTEMPLATE items
-		$content = $this->parseContent($this->data['bodytext']);
+		$content = $this->parseContent($this->data['bodycontent']);
 
 		if( !$this->getLayoutClass()	){
 			throw new \Exception('No layout class defined.');
@@ -59,16 +59,17 @@ abstract class Template extends \BaseTemplate {
 		$layout = new $layoutClass($this->getSkin(), $this);
 		//set up standard content zones
 		//head element (including opening body tag)
-		$layout->addHTMLTo('head', $this->data[ 'headelement' ]);
+		$layout->addHTMLTo('head', $this->html('headelement') );
 		//the logo image defined in LocalSettings
 		$layout->addHTMLTo('logo', $this->data['logopath']);
+		$layout->addHTMLTo('prepend:body', $this->html( 'prebodyhtml' ));
 		//the article title
 		if($this->showTitle){
 			$layout->addHTMLTo('content-container.class', 'has-title');
 			$layout->addHTMLTo('title-html', $this->data['title']);
 		}
 		//article content
-		$layout->addHTMLTo('content', $content);
+		$layout->addHTMLTo('content-html', $content);
 		//the site notice
 		if( !empty($this->data['sitenotice'])){
 			$layout->addHTMLTo('site-notice', $this->data['sitenotice']);
@@ -78,11 +79,16 @@ abstract class Template extends \BaseTemplate {
 			$layout->addHTMLTo('content-container.class', 'has-tagline');
 			$layout->addHTMLTo('tagline', $this->getMsg('tagline') );
 		}
-		$layout->addHookTo('breadcrumbs', 'breadcrumbs');
+		$breadcrumbTrees = $this->breadcrumbs();
+		$layout->addTemplateTo('breadcrumbs', 'breadcrumbs', array('trees' => $breadcrumbTrees) );
+
 		if(\Skinny::hasContent('toc')){
-			$layout->addHTMLTo('toc', \Skinny::getContent('toc'));
+			// $layout->addHTMLTo('toc', \Skinny::getContent('toc')[0]['html']);
 		}
 
+		if ( $this->data['dataAfterContent'] ) {
+			$this->addHTMLTo('after:content', $this->data['dataAfterContent']);
+		}
 		//the contents of Mediawiki:Sidebar
 		// $layout->addTemplate('classic-sidebar', 'classic-sidebar', array(
 		// 	'sections'=>$this->data['sidebar']
@@ -93,10 +99,10 @@ abstract class Template extends \BaseTemplate {
 		// ));
 
 		//page footer
-		$layout->addHookTo('footer-links', 'getFooterLinks');
-		$layout->addHookTo('footer-icons', 'getFooterIcons');
+		$layout->addHookTo('footer-links', array($this,'getFooterLinks'));
+		$layout->addHookTo('footer-icons', array($this,'getFooterIcons'));
 		//mediawiki needs this to inject script tags after the footer
-		$layout->addHookTo('after:footer', 'afterFooter');
+		$layout->addHookTo('append:body', array($this,'afterFooter'));
 
 
 		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
@@ -105,6 +111,7 @@ abstract class Template extends \BaseTemplate {
 		$this->initialize();
 
 		echo $layout->render();
+		// $this->printTrail();
 	}
 
 
@@ -146,7 +153,7 @@ abstract class Template extends \BaseTemplate {
 	}
 
 
-	protected function afterFooter(){
+	public function afterFooter(){
 		ob_start();
 		$this->printTrail();
 		return ob_get_clean();
@@ -170,7 +177,7 @@ abstract class Template extends \BaseTemplate {
 		asort( $temp );
 
 		if (empty($temp)) {
-				return '';
+				return array();
 		}
 		$trees = array();
 		foreach ($temp as $line) {
@@ -178,7 +185,7 @@ abstract class Template extends \BaseTemplate {
 			$trees[] = $matches[0];
 		}
 
-		return $this->renderTemplate('breadcrumbs', array('trees' => $trees) );
+		return $trees;
 	}
 
 
