@@ -86,9 +86,9 @@ abstract class Template extends \BaseTemplate {
 			// $layout->addHTMLTo('toc', \Skinny::getContent('toc')[0]['html']);
 		}
 
-		if ( $this->data['dataAfterContent'] ) {
-			$this->addHTMLTo('after:content', $this->data['dataAfterContent']);
-		}
+		// if ( $this->data['dataAfterContent'] ) {
+		// 	$layout->addHTMLTo('append:content', $this->data['dataAfterContent']);
+		// }
 		//the contents of Mediawiki:Sidebar
 		// $layout->addTemplate('classic-sidebar', 'classic-sidebar', array(
 		// 	'sections'=>$this->data['sidebar']
