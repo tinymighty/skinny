@@ -67,6 +67,11 @@ abstract class Layout{
 		return $this->getTemplate()->getMsg($msg);
 	}
 
+	// Given a page name, return a fully qualified URL
+	public function getPageURL ($title) {
+		return \Skin::makeURL($title);
+	}
+
   public function render () {
     // TODO... provide a better access to data than this...
     $this->data = $this->getTemplate()->data;
