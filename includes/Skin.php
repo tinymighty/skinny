@@ -108,21 +108,17 @@ function setupSkinUserCss( \OutputPage $out ) {
 	public function addToBodyAttributes( $out, &$attrs){
 		$classes = array();
 		$layout = $this->getLayout();
-		//print_r($layout); exit;
+
 		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$GLOBALS['wgSitename']));
-		// while( isset($layout['extends']) ){
-		// 	$layout = self::$layouts[ $layout['extends'] ];
-		// 	$classes[] = 'layout-'.$layout['name'];
-		// }
+
 		$layoutClass = self::getLayoutClass();
 		$layoutTree = \Skinny::getClassAncestors($layoutClass);
 		$layoutNames = array_flip(self::$layouts);
 		foreach ($layoutTree as $lc) {
-			$classes[] = 'layout-'.$layoutNames[$lc];
+			if (isset($layoutNames[$lc])) {
+				$classes[] = 'layout-'.$layoutNames[$lc];
+			}
 		}
-
-		// $classes[] = 'layout-'.$layout;
-
 		if( $GLOBALS['wgUser']->isLoggedIn() ){
 			$classes[] = 'user-loggedin';
 		}else{
