@@ -1,0 +1,42 @@
+{
+    "name": "Skinny",
+    "author": [
+      "Andru Vallance"
+    ],
+    "url": "https://www.mediawiki.org/wiki/Extension:Skinny",
+    "descriptionmsg": "skinny-desc",
+    "type": "mediawiki-extension",
+    "require": {
+    },
+    "AutoloadClasses": {
+        "Skinny": "Skinny.class.php",
+        "\\Skinny\\Layout": "includes/Layout.php",
+        "\\Skinny\\Skin": "includes/Skin.php",
+        "\\Skinny\\Slim": "includes/Slim.php",
+        "\\Skinny\\Template": "includes/Template.php"
+    },
+    "config": {
+    },
+    "ExtensionMessagesFiles": {
+      "SkinnyMagic": "Skinny.i18n.magic.php"
+    },
+    "Hooks": {
+      "BeforeInitialize": ["Skinny::init"],
+      "ParserFirstCallInit": ["Skinny::ParserFirstCallInit"],
+      "OutputPageBeforeHTML": ["Skinny::OutputPageBeforeHTML"],
+      "RequestContextCreateSkin": ["Skinny::getSkin"],
+      "ResourceLoaderRegisterModules": ["Skinny\\Skin::ResourceLoaderRegisterModules"]
+    },
+    "MessagesDirs": {
+      "Skinny": [
+        "i18n"
+      ]
+    },
+    "ResourceModules": {
+    },
+    "ResourceFileModulePaths": {
+      "localBasePath": "",
+      "remoteExtPath": "Skinny"
+    },
+    "manifest_version": 1
+}

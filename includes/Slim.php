@@ -1,36 +1,29 @@
 <?php
+namespace Skinny;
 /**
  * SkinnyTemplate provides a bit of flair to good old BaseTemplate. Use it to create
- * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate 
- * move content from your wikitext to your skin, and to safely render php templates in your 
+ * more awesome skins. Use the companion extensions like #movetoskin and #skintemplate
+ * move content from your wikitext to your skin, and to safely render php templates in your
  * wikitext for easily and safely adding advanced forms, javascript, and so on.
  *
- * It extracts all the usual MediaWiki skin html soup into re-usable template files in the 
+ * It extracts all the usual MediaWiki skin html soup into re-usable template files in the
  * template directory, and introduces add() and insert() as methods for handling content
  * display.
  *
  * Check out the documentation at http://mediawiki.net/wiki/Extension:Skinny
  */
-class SkinnySlim {
+class Slim {
 
-	protected $settings = array(
-		'debug' => false,
-		'auto_intialize' => true
-	);
+	protected $debug = false;
+	protected $auto_intialize = true;
+	protected $template_paths = array();
 
-	public $options = array();
-
-	protected $_template_paths = array();
-
-	public function __construct( $options ){
-		
-		//set options
-		$options = $this->options = array_merge($this->settings, $this->options, $options);
+	public function __construct( $options=array() ){
 
 		if( isset($options['template_path']) ){
 			$this->addTemplatePath( $options['template_path'] );
 		}
-		if( $options['auto_intialize'] === true ){
+		if( $this->auto_intialize === true ){
 			$this->initialize();
 		}
 
@@ -38,7 +31,7 @@ class SkinnySlim {
 
 	protected function addTemplatePath($path){
 		if(file_exists($path) && is_dir($path)){
-			array_unshift( $this->_template_paths, $path);
+			array_unshift( $this->template_paths, $path);
 		}
 	}
 
@@ -59,11 +52,11 @@ class SkinnySlim {
 		if($this->options['debug']===true){
 			echo '<div class="skinny-debug">Skinny:Template: '.print_r($template, true).'</div>';
 		}
-		if(count($this->_template_paths) < 1){
+		if(count($this->template_paths) < 1){
 			throw Exception('No template paths set.');
 		}
 		//try all defined template paths
-		foreach($this->_template_paths as $path){
+		foreach($this->template_paths as $path){
 			$filepath = $path.'/'.$template.'.tpl.php';
 			if( file_exists($filepath) ){
 				require( $filepath );
@@ -172,7 +165,7 @@ class SkinnySlim {
 					case 'template':
 						$content .= $this->render($item['template'], $item['params']);
 						break;
-				}	
+				}
 
 			}
 		}
@@ -203,4 +196,3 @@ class SkinnySlim {
 
 
 } // end of class
-

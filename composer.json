@@ -5,7 +5,12 @@
         "php": ">=5.3.0"
     },
     "autoload": {
-        "files": ["Skinny.php"]
+      "psr-4": {
+        "Skinny\\": "includes/"
+      },
+      "files" : [
+        "Skinny.php"
+      ]
     },
     "type": "mediawiki-extension"
 }
