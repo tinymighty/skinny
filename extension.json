@@ -10,7 +10,7 @@
     "require": {
     },
     "AutoloadClasses": {
-        "Skinny": "Skinny.class.php",
+        "\\Skinny": "Skinny.class.php",
         "\\Skinny\\Layout": "includes/Layout.php",
         "\\Skinny\\Skin": "includes/Skin.php",
         "\\Skinny\\Slim": "includes/Slim.php",
