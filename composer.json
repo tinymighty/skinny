@@ -15,7 +15,10 @@
     "autoload": {
       "files": [
         "Skinny.php"
-      ]
+      ],
+      "psr-4": {
+        "Skinny\\": "includes/"
+      }
     },
     "require": {
       "composer/installers": ">=1.0.1"
