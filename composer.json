@@ -16,6 +16,9 @@
       "files": [
         "Skinny.php"
       ],
+      "classmap": [
+        "Skinny.class.php"
+      ],
       "psr-4": {
         "Skinny\\": "includes/"
       }
