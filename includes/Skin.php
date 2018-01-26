@@ -195,7 +195,7 @@ function setupSkinUserCss( \OutputPage $out ) {
 	// }
 
 
-	public static function addTemplatePath (\String $path){
+	public static function addTemplatePath (string $path){
 		static::$template_paths[] = $path;
 	}
 

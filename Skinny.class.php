@@ -205,11 +205,13 @@ class Skinny{
 
       $skinNames = \Skin::getSkinNames();
       $skinName = $skinNames[$key];
+      
       $className = "\Skin{$skinName}";
-
-      $skin = new $className();
-      if (isset(self::$skinLayout)){
-        $skin->setLayout(self::$skinLayout);
+      if (class_exists($className)) {
+        $skin = new $className();
+        if (isset(self::$skinLayout) && method_exists($skin, 'setLayout')) {
+          $skin->setLayout(self::$skinLayout);
+        }
       }
     }
     self::$skin = $skin;
