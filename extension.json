@@ -10,10 +10,10 @@
     },
     "AutoloadClasses": {
         "Skinny": "Skinny.class.php",
-        "\\Skinny\\Layout": "includes/Layout.php",
-        "\\Skinny\\Skin": "includes/Skin.php",
-        "\\Skinny\\Slim": "includes/Slim.php",
-        "\\Skinny\\Template": "includes/Template.php"
+        "Skinny\\Layout": "includes/Layout.php",
+        "Skinny\\Skin": "includes/Skin.php",
+        "Skinny\\Slim": "includes/Slim.php",
+        "Skinny\\Template": "includes/Template.php"
     },
     "config": {
     },
