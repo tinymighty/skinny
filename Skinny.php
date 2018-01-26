@@ -11,4 +11,4 @@
  */
 
 // Haven't seen how this gets migrated to the extension.json way of doing things yet...
-$wgExtensionMessagesFiles['ExampleExtensionMagic'] = __DIR__ . '/ExampleExtension.i18n.magic.php';
+$wgExtensionMessagesFiles['SkinnyMagic'] = __DIR__ . '/Skinny.i18n.magic.php';
