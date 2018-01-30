@@ -97,7 +97,7 @@ class Skinny{
     return '<p>ADDTEMPLATE('.$spot.'):'.$template.':ETALPMETDDA</p>';
   }
 
-  function getImageURLPF ( &$parser, $name = '', $arg = 'abs' ) {
+  public static function getImageURLPF ( &$parser, $name = '', $arg = 'abs' ) {
     $img = Image::newFromName( $name );
     if($img!==NULL){
       return (  trim($arg==='abs') ? $GLOBALS['wgServer'] : '') . $img->getURL();
