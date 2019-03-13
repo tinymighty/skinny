@@ -131,11 +131,11 @@ abstract class Template extends \BaseTemplate {
 			foreach($matches as $match){
 				//if a zone is specified, attach the template
 				if(!empty($match[1])){
-					$this->addTemplate($match[1], $match[2]);
+					$this->getLayout()->addTemplateTo($match[1], $match[2]);
 					$html = str_replace($match[0], '', $html);
 				}else{
 				//otherwise inject the template inline into the wikitext
-					$html = str_replace($match[0], $this->renderTemplate($match[2]), $html);
+					$html = str_replace($match[0], $this->getLayout()->renderTemplate($match[2]), $html);
 				}
 			}
 		}
