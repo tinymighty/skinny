@@ -82,9 +82,9 @@ abstract class Template extends \BaseTemplate {
 		$breadcrumbTrees = $this->breadcrumbs();
 		$layout->addTemplateTo('breadcrumbs', 'breadcrumbs', array('trees' => $breadcrumbTrees) );
 
-		if(\Skinny::hasContent('toc')){
-			// $layout->addHTMLTo('toc', \Skinny::getContent('toc')[0]['html']);
-		}
+		// if(\Skinny::hasContent('toc')){
+		// 	$layout->addHTMLTo('toc', (\Skinny::getContent('toc')[0]['html']));
+		// }
 
 		// if ( $this->data['dataAfterContent'] ) {
 		// 	$layout->addHTMLTo('append:content', $this->data['dataAfterContent']);
