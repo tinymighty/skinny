@@ -49,14 +49,17 @@ abstract class Template extends \BaseTemplate {
 	 * This is called by MediaWiki to render the skin.
 	 */
 	final function execute() {
-		//parse content first, to allow for any ADDTEMPLATE items
-		$content = $this->parseContent($this->data['bodycontent']);
+
 
 		if( !$this->getLayoutClass()	){
 			throw new \Exception('No layout class defined.');
 		}
 		$layoutClass = $this->getLayoutClass();
 		$layout = new $layoutClass($this->getSkin(), $this);
+
+		//parse content first, to allow for any ADDTEMPLATE items
+		$content = $this->parseContent($this->data['bodycontent'], $layout);
+
 		//set up standard content zones
 		//head element (including opening body tag)
 		$layout->addHTMLTo('head', $this->html('headelement') );
@@ -125,17 +128,17 @@ abstract class Template extends \BaseTemplate {
 
 
 	//parse the bodytext and insert any templates added by the skintemplate parser function
-	public function parseContent( $html ){
+	public function parseContent( $html, $layoutInstance ){
 		$pattern = '~<p>ADDTEMPLATE\(([\w_:-]*)\):([\w_-]+):ETALPMETDDA<\/p>~m';
 		if( preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) ){
 			foreach($matches as $match){
 				//if a zone is specified, attach the template
 				if(!empty($match[1])){
-					$this->getLayout()->addTemplateTo($match[1], $match[2]);
+					$layoutInstance->addTemplateTo($match[1], $match[2]);
 					$html = str_replace($match[0], '', $html);
 				}else{
 				//otherwise inject the template inline into the wikitext
-					$html = str_replace($match[0], $this->getLayout()->renderTemplate($match[2]), $html);
+					$html = str_replace($match[0], $layoutInstance->renderTemplate($match[2]), $html);
 				}
 			}
 		}
