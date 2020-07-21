@@ -85,17 +85,19 @@ abstract class Template extends \BaseTemplate {
 		$breadcrumbTrees = $this->breadcrumbs();
 		$layout->addTemplateTo('breadcrumbs', 'breadcrumbs', array('trees' => $breadcrumbTrees) );
 
-		// if(\Skinny::hasContent('toc')){
-		// 	$layout->addHTMLTo('toc', (\Skinny::getContent('toc')[0]['html']));
-		// }
+		if(\Skinny::hasContent('toc')){
+			$layout->addHTMLTo('toc', (\Skinny::getContent('toc')[0]['html']));
+		}
 
 		// if ( $this->data['dataAfterContent'] ) {
 		// 	$layout->addHTMLTo('append:content', $this->data['dataAfterContent']);
 		// }
 		//the contents of Mediawiki:Sidebar
-		// $layout->addTemplate('classic-sidebar', 'classic-sidebar', array(
-		// 	'sections'=>$this->data['sidebar']
-		// ));
+		//add the usual mediawiki sidebar content
+		$layout->addTemplateTo('mediawiki-sidebar', 'classic-sidebar', array(
+			'sections'=>$this->data['sidebar']
+		));
+
 		// //list of language variants
 		// $layout->addTemplate('language-variants', 'language-variants', array(
 		// 	'variants'=>$this->data['language_urls']
