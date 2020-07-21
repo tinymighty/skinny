@@ -11,7 +11,7 @@ abstract class Layout{
 
 	protected $mainTemplateFile = 'main';
 
-  protected $debug = false;
+  protected $debug = true;
 
 
 	protected $skin;
@@ -155,7 +155,7 @@ abstract class Layout{
         //pre-rendered html from #movetoskin
         if(isset($item['html'])){
           if($this->debug===true){
-            $content.='<!--Skinny:MoveToSkin: '.$template.'-->';
+            // $content.='<!--Skinny:MoveToSkin: '.$zone.'-->';
           }
           $content .= $sep . $item['html'];
         }

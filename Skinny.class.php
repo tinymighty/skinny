@@ -111,7 +111,7 @@ class Skinny{
    if(empty($html))
      return $html;
 
-    if( preg_match_all('~<ins data-type="movetoskin" data-name="([\w:-]+)">([\S\s]*?)<\/ins>~m', $html, $matches, PREG_SET_ORDER) ){
+    if( preg_match_all('~!!!MOVETOSKIN data-type="movetoskin" data-name="([\w:-]+)"!!!([\S\s]*?)!!!\/MOVETOSKIN!!!~m', $html, $matches, PREG_SET_ORDER) ){
       foreach($matches as $match){
         if( !isset( self::$content[ $match[1] ] )){
           self::$content[ $match[1] ] = array();
