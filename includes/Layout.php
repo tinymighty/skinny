@@ -255,7 +255,7 @@ abstract class Layout{
     return $this->getTemplate()->html($msg);
   }
   public function text ($msg) {
-    return $this->getTemplate()->text($msg);
+    return htmlspecialchars($this->getTemplate()->html($msg));
   }
   public function url ($name) {
     return $this->getTemplate()->data['nav_urls'][$name]['href'];

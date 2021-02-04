@@ -114,6 +114,9 @@ function setupSkinUserCss( \OutputPage $out ) {
 		self::addModules($className::getResourceModules());
 	}
 
+	/**
+	 * Set the active layout
+	 */
 	public static function setLayout($name) {
 		if (!isset(static::$layouts[$name])) {
 			throw new \Exception("Layout $name does not exist");
@@ -121,16 +124,30 @@ function setupSkinUserCss( \OutputPage $out ) {
 		\Skinny::setLayout($name);
 	}
 
+	/**
+	 * Get the active layout name
+	 */
 	public function getLayout () {
 		return \Skinny::getLayout();
 	}
+	/**
+	 * Return array of layout names => class name
+	 * Defined in skin.json
+	 */
+	public function getLayoutConfig () {
+		return static::$layouts;
+	}
 
+	/**
+	 * Get the active layout class
+	 */
 	public function getLayoutClass () {
 		if (!isset(static::$layouts[\Skinny::getLayout()])) {
 			throw new \Exception("Layout $name does not exist");
 		}
 		return static::$layouts[\Skinny::getLayout()];
 	}
+
 
 	/**
 	 * Set the layout config

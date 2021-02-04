@@ -104,11 +104,13 @@ abstract class Template extends \BaseTemplate {
 		// ));
 
 		//page footer
-		$layout->addHookTo('footer-links', array($this,'getFooterLinks'));
-		$layout->addHookTo('footer-icons', array($this,'getFooterIcons'));
+		$layout->addTemplateTo('footer', 'footer', array(
+			'links'=> $this->getFooterLinks("flat"),
+			'icons'=> $this->getFooterIcons("icononly")
+		));
+
 		//mediawiki needs this to inject script tags after the footer
 		$layout->addHookTo('append:body', array($this,'afterFooter'));
-
 
 		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
 
@@ -118,7 +120,6 @@ abstract class Template extends \BaseTemplate {
 		echo $layout->render();
 		// $this->printTrail();
 	}
-
 
 
 	/**
