@@ -59,6 +59,59 @@ class Skinny{
     return true;
   }
 
+  public static function OutputPageBodyAttributes($out, $skin, &$attrs) {
+    if ($skin instanceof \Skinny\Skin) {
+      $classes = array();
+      $layout = $skin->getLayout();
+  
+      $attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_', $GLOBALS['wgSitename']));
+  
+      $layoutClass = $skin->getLayoutClass();
+      $layoutTree = self::getClassAncestors($layoutClass);
+      $layoutNames = array_flip($skin->getLayoutConfig());
+      foreach ($layoutTree as $lc) {
+        if (isset($layoutNames[$lc])) {
+          $classes[] = 'layout-'.$layoutNames[$lc];
+        }
+      }
+      if( $GLOBALS['wgUser']->isLoggedIn() ){
+        $classes[] = 'user-loggedin';
+      }else{
+        $classes[] = 'user-anonymous';
+      }
+  
+      $attrs['class'] .= ' '.implode(' ',$classes);
+    }
+  }
+
+  //hook for RequestContextCreateSkin
+  public static function RequestContextCreateSkin($context, &$skin){
+
+    //there's probably a better way to check for this...
+    if(!isset($_GET['useskin'])){
+      $key = $GLOBALS['wgDefaultSkin'];
+      if( self::$pageSkin ){
+        $key = new self::$pageSkin;
+      }
+
+      $key = \Skin::normalizeKey( $key );
+
+      $skinNames = \Skin::getSkinNames();
+      $skinName = $skinNames[$key];
+
+      $className = "\Skin{$skinName}";
+      if (class_exists($className)) {
+        $skin = new $className();
+        if (isset(self::$skinLayout) && method_exists($skin, 'setLayout')) {
+          $skin->setLayout(self::$skinLayout);
+        }
+      }
+    }
+    self::$skin = $skin;
+
+    return true;
+  }
+
 
   public static function build( $path, $options=array() ){
     $options['template_path'] = $path;
@@ -133,6 +186,7 @@ class Skinny{
     return self::$skinLayout;
   }
 
+
   public static function hasContent($target){
     if(isset(self::$content[$target]))
       return true;
@@ -189,34 +243,6 @@ class Skinny{
       $html = preg_replace($pattern, '', $html);
     }
     return $html;
-  }
-
-  //hook for RequestContextCreateSkin
-  public static function getSkin($context, &$skin){
-
-    //there's probably a better way to check for this...
-    if(!isset($_GET['useskin'])){
-      $key = $GLOBALS['wgDefaultSkin'];
-      if( self::$pageSkin ){
-        $key = new self::$pageSkin;
-      }
-
-      $key = \Skin::normalizeKey( $key );
-
-      $skinNames = \Skin::getSkinNames();
-      $skinName = $skinNames[$key];
-
-      $className = "\Skin{$skinName}";
-      if (class_exists($className)) {
-        $skin = new $className();
-        if (isset(self::$skinLayout) && method_exists($skin, 'setLayout')) {
-          $skin->setLayout(self::$skinLayout);
-        }
-      }
-    }
-    self::$skin = $skin;
-
-    return true;
   }
 
   public static function getClassAncestors ($class) {

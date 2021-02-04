@@ -24,7 +24,8 @@
       "BeforeInitialize": ["Skinny::init"],
       "ParserFirstCallInit": ["Skinny::ParserFirstCallInit"],
       "OutputPageBeforeHTML": ["Skinny::OutputPageBeforeHTML"],
-      "RequestContextCreateSkin": ["Skinny::getSkin"],
+      "OutputPageBodyAttributes": ["Skinny::OutputPageBodyAttributes"],
+      "RequestContextCreateSkin": ["Skinny::RequestContextCreateSkin"],
       "ResourceLoaderRegisterModules": ["Skinny\\Skin::ResourceLoaderRegisterModules"]
     },
     "MessagesDirs": {

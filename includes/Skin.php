@@ -103,33 +103,6 @@ function setupSkinUserCss( \OutputPage $out ) {
 	}
 
 	/**
-	 * Called by OutputPage to provide opportunity to add to body attrs
-	 */
-	public function addToBodyAttributes( $out, &$attrs){
-		$classes = array();
-		$layout = $this->getLayout();
-
-		$attrs['class'] .= ' sitename-'.strtolower(str_replace(' ','_',$GLOBALS['wgSitename']));
-
-		$layoutClass = self::getLayoutClass();
-		$layoutTree = \Skinny::getClassAncestors($layoutClass);
-		$layoutNames = array_flip(self::$layouts);
-		foreach ($layoutTree as $lc) {
-			if (isset($layoutNames[$lc])) {
-				$classes[] = 'layout-'.$layoutNames[$lc];
-			}
-		}
-		if( $GLOBALS['wgUser']->isLoggedIn() ){
-			$classes[] = 'user-loggedin';
-		}else{
-			$classes[] = 'user-anonymous';
-		}
-
-		$attrs['class'] .= ' '.implode(' ',$classes);
-
-	}
-
-	/**
 	 * Add a new skin layout for this skin
 	 */
 	public static function addLayout ($name, $className){
