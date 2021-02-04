@@ -19,7 +19,7 @@ abstract class Template extends \BaseTemplate {
 	protected $showTitle = true;
 	protected $showTagline = true;
 
-	protected $showBreadcrumbs = true;
+	protected $showBreadcrumbs = false;
 	protected $breadcrumbsZone = 'prepend:title';
 
 	protected $template_paths = array();
@@ -82,8 +82,8 @@ abstract class Template extends \BaseTemplate {
 			$layout->addHTMLTo('content-container.class', 'has-tagline');
 			$layout->addHTMLTo('tagline', $this->getMsg('tagline') );
 		}
-		$breadcrumbTrees = $this->breadcrumbs();
-		$layout->addTemplateTo('breadcrumbs', 'breadcrumbs', array('trees' => $breadcrumbTrees) );
+		// $breadcrumbTrees = $this->breadcrumbs();
+		// $layout->addTemplateTo('breadcrumbs', 'breadcrumbs', array('trees' => $breadcrumbTrees) );
 
 		if(\Skinny::hasContent('toc')){
 			$layout->addHTMLTo('toc', (\Skinny::getContent('toc')[0]['html']));
@@ -169,28 +169,43 @@ abstract class Template extends \BaseTemplate {
 
 		// get category tree
 		$parenttree = $this->getSkin()->getTitle()->getParentCategoryTree();
-		$rendered = $this->getSkin()->drawCategoryBrowser( $parenttree );
-		/*echo '<pre>';
-		print_r($parenttree);
-		print_r($rendered);
-		echo '</pre>';*/
-		//exit;
-		// Skin object passed by reference cause it can not be
-		// accessed under the method subfunction drawCategoryBrowser
-		$temp = explode( "\n", $rendered );
-		unset( $temp[0] );
-		asort( $temp );
+		return;
+		// $linkRenderer = \MediaWikiServices::getInstance()->getLinkRenderer();
+		// $trees = array();
 
-		if (empty($temp)) {
-				return array();
-		}
-		$trees = array();
-		foreach ($temp as $line) {
-			preg_match_all('~<a[\S\s]+?</a>~', $line, $matches);
-			$trees[] = $matches[0];
-		}
+		// foreach ( $parenttree as $element => $parent ) {
+		// 		if ( empty( $parent ) ) {
+		// 				# element start a new list
+		// 				$trees[$element] = [];
+		// 				foreach ($element as $el2 => $par2) {
+		// 					$eltitle = Title::newFromText( $element );
+		// 					$trees[$element][] = $par2;
+		// 				}
+		// 		} else {
+		// 			$trees[$element] = [$parent];
+		// 		}
+		// }
+		// 		# add our current element to the list
+				
+		// 		$rendered .= $linkRenderer->makeLink( $eltitle, $eltitle->getText() );
 
-		return $trees;
+
+		// // Skin object passed by reference cause it can not be
+		// // accessed under the method subfunction drawCategoryBrowser
+		// $temp = explode( "\n", $rendered );
+		// unset( $temp[0] );
+		// asort( $temp );
+
+		// if (empty($temp)) {
+		// 		return array();
+		// }
+		// $trees = array();
+		// foreach ($temp as $line) {
+		// 	preg_match_all('~<a[\S\s]+?</a>~', $line, $matches);
+		// 	$trees[] = $matches[0];
+		// }
+
+		// return $trees;
 	}
 
 
