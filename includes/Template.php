@@ -106,7 +106,7 @@ abstract class Template extends \BaseTemplate {
 		//page footer
 		$layout->addTemplateTo('footer', 'footer', array(
 			'links'=> $this->getFooterLinks("flat"),
-			'icons'=> $this->getFooterIcons("icononly")
+			'icons'=> $this->get("footericons")
 		));
 
 		//mediawiki needs this to inject script tags after the footer
