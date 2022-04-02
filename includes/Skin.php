@@ -59,26 +59,18 @@ class Skin extends \SkinTemplate{
 	public function initPage( \OutputPage $out ){
 		parent::initPage( $out );
 
+		//TODO: load modules from parent of layout, too...
+		$layoutClass = self::getLayoutClass();
+		$layoutTree = \Skinny::getClassAncestors($layoutClass);
+		$styles = array('mediawiki.skinning.interface');
+		foreach ($layoutTree as $lc) {
+			$styles = array_merge($styles, $lc::getHeadModules());
+		}
+
+		$out->addModuleStyles( $styles );
 		$out->addModules(self::$autoloadModules);
 	}
 
-	/**
- * Loads skin and user CSS files.
- * @param OutputPage $out
- */
-function setupSkinUserCss( \OutputPage $out ) {
-	parent::setupSkinUserCss( $out );
-
-	//TODO: load modules from parent of layout, too...
-	$layoutClass = self::getLayoutClass();
-	$layoutTree = \Skinny::getClassAncestors($layoutClass);
-	$styles = array('mediawiki.skinning.interface');
-	foreach ($layoutTree as $lc) {
-		$styles = array_merge($styles, $lc::getHeadModules());
-	}
-
-	$out->addModuleStyles( $styles );
-}
 
 	/**
 	 * Hooking into the template setup process to provide a custom template
