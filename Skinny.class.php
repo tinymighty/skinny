@@ -74,7 +74,8 @@ class Skinny{
           $classes[] = 'layout-'.$layoutNames[$lc];
         }
       }
-      if( $GLOBALS['wgUser']->isLoggedIn() ){
+      $user  = \RequestContext::getMain()->getUser();
+      if( $user->isRegistered() ){
         $classes[] = 'user-loggedin';
       }else{
         $classes[] = 'user-anonymous';
@@ -96,7 +97,7 @@ class Skinny{
 
       $key = \Skin::normalizeKey( $key );
 
-      $skinNames = \Skin::getSkinNames();
+      $skinNames = \MediaWiki\MediaWikiServices::getInstance()->getSkinFactory()->getSkinNames();
       $skinName = $skinNames[$key];
 
       $className = "\Skin{$skinName}";
