@@ -12,5 +12,6 @@
         "Skinny.php"
       ]
     },
-    "type": "mediawiki-extension"
+    "type": "mediawiki-extension",
+    "license": "GPL-2.0-or-later"
 }
