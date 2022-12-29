@@ -118,7 +118,6 @@ abstract class Template extends \BaseTemplate {
 		$this->initialize();
 
 		echo $layout->render();
-		// $this->printTrail();
 	}
 
 
@@ -160,9 +159,15 @@ abstract class Template extends \BaseTemplate {
 
 
 	public function afterFooter(){
-		ob_start();
-		$this->printTrail();
-		return ob_get_clean();
+
+		// $skin = $this->getSkin();
+		// $options = $skin->getOptions();
+
+		// return $options['bodyOnly'] ? '' : WrappedString::join( "\n", [
+		// 		MWDebug::getDebugHTML( $skin->getContext() ),
+		// 		$this->get( 'bottomscripts' ),
+		// 		$this->get( 'reporttime' )
+		// ] );
 	}
 
 	/* Render the category heirarchy as breadcrumbs */
