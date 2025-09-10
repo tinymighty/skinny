@@ -61,6 +61,8 @@ abstract class Template extends \BaseTemplate {
 		$content = $this->parseContent($this->data['bodycontent'], $layout);
 
 		//set up standard content zones
+		//the head element
+		$layout->addHTMLTo('head', $this->getSkin()->getOutput()->headElement($this->getSkin()) );
 		//the logo image defined in LocalSettings
 		$layout->addHTMLTo('logo', $this->data['logopath']);
 		$layout->addHTMLTo('prepend:body', $this->html( 'prebodyhtml' ));
