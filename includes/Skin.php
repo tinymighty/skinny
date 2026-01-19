@@ -39,7 +39,7 @@ class Skin extends \SkinTemplate{
 	 *
 	 * Handler for Hook: ResourceLoaderRegisterModules hook.
 	 */
-	public static function ResourceLoaderRegisterModules( \ResourceLoader $rl ){
+	public static function ResourceLoaderRegisterModules( \MediaWiki\ResourceLoader\ResourceLoader $rl ){
 		self::$_modulesRegistered = true;
 		$rl->register( self::$modules );
     return true;

@@ -97,7 +97,7 @@ class Skinny{
 
       $key = \Skin::normalizeKey( $key );
 
-      $skinNames = \MediaWiki\MediaWikiServices::getInstance()->getSkinFactory()->getSkinNames();
+      $skinNames = \MediaWiki\MediaWikiServices::getInstance()->getSkinFactory()->getInstalledSkins();
       $skinName = $skinNames[$key];
 
       $className = "\Skin{$skinName}";

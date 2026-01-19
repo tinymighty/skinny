@@ -112,8 +112,9 @@ abstract class Template extends \BaseTemplate {
 		//mediawiki needs this to inject script tags after the footer
 		$layout->addHookTo('append:body', array($this,'afterFooter'));
 
-		$this->data['pageLanguage'] = $this->getSkin()->getTitle()->getPageViewLanguage()->getCode();
-
+		$this->data['pageLanguage'] = ($this->getSkin()->getOutput()->getMetadata()->getLanguage()
+        ?? $this->getSkin()->getOutput()->getLanguage()
+    )->getCode();
 		//allow skins to set up before render
 		$this->initialize();
 
