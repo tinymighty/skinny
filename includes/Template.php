@@ -23,6 +23,7 @@ abstract class Template extends \BaseTemplate {
 	protected $breadcrumbsZone = 'prepend:title';
 
 	protected $template_paths = array();
+	public $data = array();
 
 	public function setLayout ($name) {
 		$this->getSkin()->setLayout($name);

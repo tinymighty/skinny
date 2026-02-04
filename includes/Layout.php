@@ -18,6 +18,7 @@ abstract class Layout{
 	protected $template;
 
 	protected $content = array();
+  public $data = array();
 
 	public static function getResourceModules () {
 		return array();
